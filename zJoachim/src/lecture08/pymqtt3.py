@@ -9,10 +9,16 @@ port = 1883 #port for MQTT
 client = mqtt.Client('hyperdrive')
 vehicleID = 'd716ea410e89' #change according to the vehicle ID
 
+emergency_topic = "Anki/Emergency/U" #path for emergency topic
+emergency_flag = False #setting initial flag value to False
+
+#TODO: FINISH THE FINAL EXERCISE IMPLEMENTATION FOR THE EMERGENCY STOP
+#TODO: IMPLEMENT A FUNCTION THAT PARSES THROUGHT AVAILABLE VEHICLES AND CHOOSES ONE
+#TODO: IMPLEMENT THE PAYLOAD_DISCOVER TO AVOID HAVING TO DO IT MANUALLY EACH TIME
+
+
 def on_connect(client, userdata, flags, rc):
     print(f"Connected with result code {rc}")
-
-    #TODO: IMPLEMENT THE PAYLOAD_DISCOVER TO AVOID HAVING TO DO IT MANUALLY EACH TIME
 
     #payload_discover = {"type": "discover",
     #    "payload": {
@@ -133,6 +139,45 @@ def change_lane(vehicleID):
         print("Lane change interrupted. Stopping the car.")
     finally:
         client.disconnect()
+
+def stop_vehicles():
+    #sets the pause event to pause the drive_car and change_lane threads
+    print("Stopping vehicle")
+    pause_drive_event.set()
+    pause_lane_event.set()
+    
+    time.sleep(10)
+
+    #clears the pause event so vehicles can resume their activity
+    pause_drive_event.clear()
+    pause_lane_event.clear()
+
+    print("Resuming vehicle")
+    
+
+
+def emergency_stop_process():
+    client_emergency = mqtt.Client('emergency_stop_process')
+    client_emergency.on_connect = on_connect
+    client_emergency.on_message = on_message
+
+    print(f"Connecting to broker at {ip_address}:{port} for emergency stop process")
+    client_emergency.connect(ip_address, port=port)
+
+    client_emergency.loop_start()
+
+    try:
+        while True:
+            time.sleep(1)  #check the emergency flag every second
+            if emergency_flag:
+                stop_vehicles() 
+            else:
+                print("Emergency stop is inactive. Vehicles can resume normal operations.")
+
+    except KeyboardInterrupt:
+        print("Emergency stop process interrupted.")
+    finally:
+        client_emergency.disconnect()
         
 #publish the initial connect message        
 json_payload = {
@@ -153,6 +198,10 @@ time.sleep(5)
 #blink_lights(vehicleID) #blinking lights function
 #drive_car(vehicleID) #drive_car function
 #change_lane(vehicleID) #change lane function
+
+#event objects to control the pause/resume of threads
+pause_drive_event = threading.Event()
+pause_lane_event = threading.Event()
 
 blink_thread = threading.Thread(target=blink_lights, args=(vehicleID,)) #create a thread for the blink_lights function
 blink_thread.start()
