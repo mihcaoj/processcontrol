@@ -140,20 +140,17 @@ def change_lane(vehicleID):
     finally:
         client.disconnect()
 
-def stop_vehicles():
+def stop_vehicle():
     #sets the pause event to pause the drive_car and change_lane threads
     print("Stopping vehicle")
     pause_drive_event.set()
     pause_lane_event.set()
-    
-    time.sleep(10)
 
+def resume_vehicle():
     #clears the pause event so vehicles can resume their activity
+    print("Resuming vehicle")
     pause_drive_event.clear()
     pause_lane_event.clear()
-
-    print("Resuming vehicle")
-    
 
 
 def emergency_stop_process():
@@ -170,7 +167,7 @@ def emergency_stop_process():
         while True:
             time.sleep(1)  #check the emergency flag every second
             if emergency_flag:
-                stop_vehicles() 
+                stop_vehicle() 
             else:
                 print("Emergency stop is inactive. Vehicles can resume normal operations.")
 
@@ -200,8 +197,11 @@ time.sleep(5)
 #change_lane(vehicleID) #change lane function
 
 #event objects to control the pause/resume of threads
-pause_drive_event = threading.Event()
-pause_lane_event = threading.Event()
+#pause_drive_event = threading.Event()
+#pause_lane_event = threading.Event()
+
+emergency_thread = threading.Thread(target=emergency_stop_process) #create a thread for emergency stopping
+emergency_thread.start()
 
 blink_thread = threading.Thread(target=blink_lights, args=(vehicleID,)) #create a thread for the blink_lights function
 blink_thread.start()

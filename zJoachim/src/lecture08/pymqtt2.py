@@ -12,17 +12,6 @@ vehicleID = 'd716ea410e89' #change according to the vehicle ID
 def on_connect(client, userdata, flags, rc):
     print(f"Connected with result code {rc}")
 
-    #TODO: IMPLEMENT THE PAYLOAD_DISCOVER TO AVOID HAVING TO DO IT MANUALLY EACH TIME
-
-    #payload_discover = {"type": "discover",
-    #    "payload": {
-    #    "value": True
-    #    }
-    #}
-
-    #publish(client, "Anki/Hosts/U/hyperdrive/I/", payload_discover) #publish the payload to change the discover from false to true
-    #print("Published the discover payload succesfully")
-
     if rc == 0:
         print(f"Connected to broker at {ip_address}:{port}") #explicitly publish a "connected" message when connected
         publish(client, "Anki/Vehicles/U/" + vehicleID + "/S/status", {"value": "connected"})
