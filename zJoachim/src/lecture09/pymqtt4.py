@@ -13,6 +13,7 @@ vehicleID = 'f4c22c6c0382'  # change according to the vehicle ID
 emergency_topic = "Anki/Emergency/U"  # path for emergency topic
 emergency_flag = False  # setting initial flag value to False
 
+
 # TODO: IMPLEMENT A FUNCTION THAT PARSES THROUGH AVAILABLE VEHICLES AND CHOOSES ONE
 # TODO: IMPLEMENT A DISCONNECT FUNCTION
 
@@ -20,18 +21,20 @@ def on_connect(client, userdata, flags, rc):
     print(f"Connected with result code {rc}")
 
     payload_discover = {"type": "discover",
-        "payload": {
-        "value": True
-        }
-    }
+                        "payload": {
+                            "value": True
+                        }
+                        }
 
-    publish(client, "Anki/Hosts/U/hyperdrive/I/", payload_discover) #publish the payload to change the discover from false to true
-    print("Published the discover payload succesfully")
+    publish(client, "Anki/Hosts/U/hyperdrive/I/",
+            payload_discover)  # publish the payload to change discover from false to true
+    print("Published the discover payload successfully")
 
     if rc == 0:
         print(f"Connected to broker at {ip_address}:{port}")
         publish(client, "Anki/Vehicles/U/" + vehicleID + "/S/status", {"value": "connected"})
         print("Publish successful")
+
 
 def on_message(client, userdata, msg):
     print(f"Received {msg.payload} from {msg.topic}")
@@ -42,9 +45,11 @@ def on_message(client, userdata, msg):
         emergency_flag = payload.get("value", False)
         print(f"Emergency flag is set to {emergency_flag}")
 
+
 def subscribe(client: mqtt.Client):
     client.subscribe("Anki/Vehicles/U/" + vehicleID + "/S/status")  # subscribe to the status of the vehicle
     client.on_message = on_message
+
 
 def publish(client: mqtt.Client, topic: str, payload: dict):
     message = json.dumps(payload)
@@ -73,11 +78,13 @@ def blink_lights(vehicleID):
         print(f"Start the blink on vehicle: {vehicleID}")
 
         while True:
-            publish(client, "Anki/Vehicles/U/" + vehicleID + "/I/jb", payload_on)  # publish the json payload to turn on the lights
+            publish(client, "Anki/Vehicles/U/" + vehicleID + "/I/jb",
+                    payload_on)  # publish the json payload to turn on the lights
             print(f"Published: {payload_on} to {vehicleID}")
             time.sleep(1)
 
-            publish(client, "Anki/Vehicles/U/" + vehicleID + "/I/jb", payload_off)  # publish the json payload to turn off the lights
+            publish(client, "Anki/Vehicles/U/" + vehicleID + "/I/jb",
+                    payload_off)  # publish the json payload to turn off the lights
             print(f"Published: {payload_off} to {vehicleID}")
             time.sleep(1)
 
@@ -165,8 +172,8 @@ def stop_vehicle():
     pause_lane_event.set()
 
 
-#def resume_vehicle():
-    # clears the pause event so vehicles can resume their activity
+# def resume_vehicle():
+# clears the pause event so vehicles can resume their activity
 #    print("Resuming vehicle")
 #    pause_drive_event.clear()
 #    pause_lane_event.clear()
@@ -195,10 +202,12 @@ def emergency_stop_process():
     finally:
         client_emergency.disconnect()
 
+
 def change_flag_status():
     global emergency_flag
     emergency_flag = not emergency_flag
     print(f"Emergency flag is now: {emergency_flag}")
+
 
 def run_tkinter():
     def create_tkinter_window():
@@ -213,6 +222,7 @@ def run_tkinter():
         app.mainloop()  # Run the Tkinter event loop
 
     app_ref = None
+
     def start_tkinter():
         nonlocal app_ref
         app_ref = tk.Tk()
@@ -226,6 +236,7 @@ def run_tkinter():
 
     # Keep a reference to the app so that it doesn't get garbage collected
     return app_ref
+
 
 # publish the initial connect message
 json_payload = {
