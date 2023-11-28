@@ -17,13 +17,17 @@ class GUI:
         # Slider for changing the velocity
         velocity_label = tk.Label(app, text="Velocity:")
         velocity_label.pack()
-        velocity_slider = tk.Scale(app, from_=0, to=100, orient=tk.HORIZONTAL, command=self.update_velocity)
+        velocity_slider = tk.Scale(app, from_=0, to=100,
+                                   orient=tk.HORIZONTAL,
+                                   command=self.vehicle_control.update_velocity)
         velocity_slider.pack()
 
         # Slider for changing acceleration
         acceleration_label = tk.Label(app, text="Acceleration:")
         acceleration_label.pack()
-        acceleration_slider = tk.Scale(app, from_=0, to=100, orient=tk.HORIZONTAL, command=self.update_acceleration)
+        acceleration_slider = tk.Scale(app, from_=0, to=100,
+                                       orient=tk.HORIZONTAL,
+                                       command=self.vehicle_control.update_acceleration)
         acceleration_slider.pack()
 
         app.mainloop()

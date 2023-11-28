@@ -1,6 +1,5 @@
 import json
 import time
-import random
 
 
 # Class for controlling the vehicles
@@ -117,3 +116,13 @@ class VehicleControl:
     def change_flag_status(self):
         self.emergency_flag = not self.emergency_flag
         print(f"Emergency flag status changed to: {self.emergency_flag}")
+
+    def update_velocity(self, value):
+        # Method to handle velocity updates
+        print(f"Velocity updated to: {value}")
+        # TODO: Add logic to update the velocity
+
+    def update_acceleration(self, value):
+        # Method to handle acceleration updates
+        print(f"Acceleration updated to: {value}")
+        # TODO: Add logic to update the acceleration
