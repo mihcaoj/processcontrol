@@ -2,6 +2,7 @@ import paho.mqtt.client as mqtt
 import json
 
 
+# Class for handling communication with Anki vehicles
 class AnkiController:
     def __init__(self, ip_address, port, vehicle_id):
         self.ip_address = ip_address
@@ -23,31 +24,39 @@ class AnkiController:
         print(f"Connected with result code {rc}")
 
         payload_discover = {"type": "discover",
-                            "payload": {
-                                "value": True
-                            }
-                            }
+                            "payload": {"value": True}}
+
+        payload_connect = {"type": "connect",
+                           "payload": {"value": 'true'}}
 
         self.publish("Anki/Hosts/U/hyperdrive/I/", payload_discover)
         print("Published the discover payload successfully")
 
+        # Check if the connection result code is 0 (success)
         if rc == 0:
             print(f"Connected to broker at {self.ip_address}:{self.port}")
             self.subscribe()
-            self.publish("Anki/Vehicles/U/{self.vehicle_id}/S/status", {"value": "connected"})
+            self.publish(f"Anki/Vehicles/U/{self.vehicle_id}/I/", payload_connect)
             print("Publish successful")
 
     def on_message(self, client, userdata, msg):
-        print(f"Received {msg.payload} from {msg.topic}")
-        payload = json.loads(msg.payload.decode("utf-8"))
+        try:
+            print(f"Received {msg.payload} from {msg.topic}")
+            # Decode the JSON payload and handle messages related to emergency and track information
+            payload = json.loads(msg.payload.decode("utf-8"))
 
-        if msg.topic == "Anki/Emergency/U":
-            self.emergency_flag = payload.get("value", False)
-            print(f"Emergency flag is set to {self.emergency_flag}")
+            if msg.topic == "Anki/Emergency/U":
+                self.emergency_flag = payload.get("value", False)
+                print(f"Emergency flag is set to {self.emergency_flag}")
+
+        except json.JSONDecodeError as e:
+            print(f"Error decoding JSON message: {e}")
+        except Exception as e:
+            print(f"Error in on_message: {e}")
 
     def subscribe(self):
-        self.client.subscribe("Anki/Vehicles/U/{self.vehicle_id}/S/status")
-        self.client.subscribe("Anki/Vehicles/U/{self.vehicle_id}/E/track")
+        self.client.subscribe(f"Anki/Vehicles/U/{self.vehicle_id}/S/status")  # subscribe to status topic
+        self.client.subscribe(f"Anki/Vehicles/U/{self.vehicle_id}/E/track")  # subscribe to track topic
 
     def publish(self, topic, payload):
         message = json.dumps(payload)
@@ -57,20 +66,32 @@ class AnkiController:
     def disconnect(self):
         self.client.disconnect()
 
-    @property  # This decorator is applied to the emergency_flag method, making it a read-only property
+    def process_track_information(self):
+        print("Processing Track Information:")
+
+        # Accessing the current_track property to retrieve its value
+        current_track_value = self.current_track
+        print(f"Current Track: {current_track_value}")
+
+        # Modifying the current_track property
+        new_track_value = "new_track_id"
+        self.current_track = new_track_value
+        print(f"Updated Current Track: {self.current_track}")
+
+    @property  # Getter method for the emergency_flag property
     def emergency_flag(self):
         return self._emergency_flag
 
-    @emergency_flag.setter  # This designates the emergency_flag method as a setter for the corresponding property
+    @emergency_flag.setter  # Setter method for the emergency_flag property
     def emergency_flag(self, value):
         self._emergency_flag = value
         print(f"Emergency flag status changed to: {self._emergency_flag}")
 
-    @property # This decorator is applied to the current_track
+    @property  # Getter method for the current_track property
     def current_track(self):
         return self._current_track
 
-    @current_track.setter
+    @current_track.setter # Setter method for the current_track property
     def current_track(self, value):
         self._current_track = value
         print(f"Current track ID changed to: {self._current_track}")

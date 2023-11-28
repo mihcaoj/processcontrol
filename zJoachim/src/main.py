@@ -3,9 +3,9 @@ from vehicle_control import VehicleControl
 from emergency_stop import EmergencyStop
 from tkinter_gui import GUI
 import threading
-import time
 
-if __name__ == "__main__":
+
+def main():
     ip_address = '192.168.4.1'
     port = 1883
     vehicle_id = 'd205effe02cb'
@@ -16,36 +16,24 @@ if __name__ == "__main__":
     tkinter_gui = GUI(vehicle_control)
 
     # Initialize thread variables
-    blink_thread = None
-    drive_thread = None
-    change_lane_thread = None
-    emergency_thread = None
-    tkinter_thread = None
+    blink_thread = threading.Thread(target=vehicle_control.blink_lights, args=(vehicle_id,))
+    drive_thread = threading.Thread(target=vehicle_control.drive_car, args=(vehicle_id,))
+    change_lane_thread = threading.Thread(target=vehicle_control.change_lane, args=(vehicle_id,))
+    emergency_thread = threading.Thread(target=emergency_process.run)
+    tkinter_thread = threading.Thread(target=tkinter_gui.create_tkinter_window)
 
     try:
-        # Create threads for each functionality
-        blink_thread = threading.Thread(target=vehicle_control.blink_lights, args=(vehicle_id,))
-        drive_thread = threading.Thread(target=vehicle_control.drive_car, args=(vehicle_id,))
-        change_lane_thread = threading.Thread(target=vehicle_control.change_lane, args=(vehicle_id,))
-        emergency_thread = threading.Thread(target=emergency_process.run)
-        tkinter_thread = threading.Thread(target=tkinter_gui.create_tkinter_window)
-
         # Start the threads
         blink_thread.start()
         drive_thread.start()
         change_lane_thread.start()
         emergency_thread.start()
-        tkinter_thread.start()
 
         # Run the GUI
-        # tkinter_thread = tkinter_gui.create_tkinter_window()
-
-        while True:
-            time.sleep(1)
+        tkinter_thread.start()
 
     except KeyboardInterrupt:
         print("Main program interrupted.")
-
     finally:
         # Stop the threads and perform cleanup
         vehicle_control.stop_vehicle()
@@ -61,3 +49,7 @@ if __name__ == "__main__":
 
         # Stop the MQTT client loop
         controller.client.loop_stop()
+
+
+if __name__ == "__main__":
+    main()

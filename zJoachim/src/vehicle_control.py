@@ -3,6 +3,7 @@ import time
 import random
 
 
+# Class for controlling the vehicles
 class VehicleControl:
     def __init__(self, controller):
         self.emergency_flag = False
@@ -29,11 +30,11 @@ class VehicleControl:
             print(f"Start the blink on vehicle: {vehicle_id}")
 
             while True:
-                self.controller.publish("Anki/Vehicles/U/" + vehicle_id + "/I/jb", payload_on)
+                self.controller.publish(f"Anki/Vehicles/U/{vehicle_id}/I/jb", payload_on)
                 print(f"Published: {payload_on} to {vehicle_id}")
                 time.sleep(1)
 
-                self.controller.publish("Anki/Vehicles/U/" + vehicle_id + "/I/jb", payload_off)
+                self.controller.publish(f"Anki/Vehicles/U/{vehicle_id}/I/jb", payload_off)
                 print(f"Published: {payload_off} to {vehicle_id}")
                 time.sleep(1)
 
@@ -48,8 +49,8 @@ class VehicleControl:
 
             while True:
                 if not self.controller.emergency_flag:
-                    velocity = random.randint(-100, 2000)
-                    acceleration = random.randint(0, 2000)
+                    velocity = 500  # random.randint(-100, 2000)
+                    acceleration = 500  # random.randint(0, 2000)
                 else:
                     velocity = 0
                     acceleration = 0
@@ -62,7 +63,7 @@ class VehicleControl:
                     }
                 }
 
-                self.controller.publish("Anki/Vehicles/U/" + vehicle_id + "/I/jb", payload_speed)
+                self.controller.publish(f"Anki/Vehicles/U/{vehicle_id}/I/jb", payload_speed)
                 print(f"Published speed: {payload_speed}")
 
                 time.sleep(3)
@@ -78,9 +79,9 @@ class VehicleControl:
 
             while True:
                 if not self.controller.emergency_flag:
-                    offset = random.randint(-1000, 1000)
-                    velocity = random.randint(0, 1000)
-                    acceleration = random.randint(0, 2000)
+                    offset = 500  # random.randint(-1000, 1000)
+                    velocity = 500  # random.randint(0, 1000)
+                    acceleration = 500  # random.randint(0, 2000)
                 else:
                     offset = 0
                     velocity = 0
@@ -95,7 +96,7 @@ class VehicleControl:
                     }
                 }
 
-                self.controller.publish("Anki/Vehicles/U/" + vehicle_id + "/I/jb", payload_lane)
+                self.controller.publish(f"Anki/Vehicles/U/{vehicle_id}/I/jb", payload_lane)
                 print(f"Published lane change: {payload_lane}")
 
                 time.sleep(5)
@@ -116,4 +117,3 @@ class VehicleControl:
     def change_flag_status(self):
         self.emergency_flag = not self.emergency_flag
         print(f"Emergency flag status changed to: {self.emergency_flag}")
-

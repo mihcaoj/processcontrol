@@ -8,18 +8,11 @@ import tkinter as tk
 ip_address = '192.168.4.1'  # ip address of the hyperdrive
 port = 1883  # port for MQTT
 client = mqtt.Client('hyperdrive')
-vehicleID = 'd205effe02cb'  # change according to the vehicle ID
+vehicleID = 'cec233dec1cb'  # change according to the vehicle ID
 
 emergency_topic = "Anki/Emergency/U"  # path for emergency topic
 emergency_flag = False  # setting initial flag value to False
 
-track_topic = "Anki/Vehicles/U/" + vehicleID + "/E/track"
-
-# TODO: FIX DISCOVER METHOD
-# TODO: DISCONNECT ON SHUTDOWN
-
-# TODO: IMPLEMENT THE GUI SKELETON
-# TODO: IMPLEMENT THE LOGIC FOR THE GUI
 
 def on_connect(client, userdata, flags, rc):
     print(f"Connected with result code {rc}")
@@ -208,11 +201,6 @@ def emergency_stop_process():
         print("Emergency stop process interrupted.")
     finally:
         client_emergency.disconnect()
-
-
-def current_track(client: mqtt.Client):
-    client.subscribe(track_topic)
-    client.on_message = on_message
 
 
 def run_tkinter():
