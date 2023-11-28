@@ -1,11 +1,9 @@
-package java_code;
-
-import java_code.processes.FrontBlinker;
-import java_code.processes.LaneChanger;
-import java_code.processes.SpeedChanger;
-import java_code.setup.MqttHandler;
-import java_code.setup.VehicleConnector;
-import java_code.setup.VehicleDiscoverer;
+import processes.FrontBlinker;
+import processes.LaneChanger;
+import processes.SpeedChanger;
+import setup.MqttHandler;
+import setup.VehicleConnector;
+import setup.VehicleDiscoverer;
 import org.eclipse.paho.client.mqttv3.MqttException;
 
 import java.io.IOException;

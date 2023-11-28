@@ -1,4 +1,4 @@
-package java_code.setup;
+package setup;
 
 import java.util.Hashtable;
 
