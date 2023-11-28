@@ -1,7 +1,7 @@
-package java_code.processes;
+package processes;
 
-import lecture08.messages.MessageHandler;
-import lecture08.setup.MqttHandler;
+import messages.MessageHandler;
+import setup.MqttHandler;
 import org.eclipse.paho.client.mqttv3.MqttException;
 
 import java.util.Hashtable;
