@@ -35,20 +35,24 @@ def main():
     except KeyboardInterrupt:
         print("Main program interrupted.")
     finally:
-        # Stop the threads and perform cleanup
-        vehicle_control.stop_vehicle()
+        try:
+            # Stop the threads and perform cleanup
+            vehicle_control.stop_vehicle()
 
-        # Wait for threads to finish
-        blink_thread.join()
-        drive_thread.join()
-        change_lane_thread.join()
-        emergency_thread.join()
+            # Wait for threads to finish
+            blink_thread.join()
+            drive_thread.join()
+            change_lane_thread.join()
+            emergency_thread.join()
 
-        # Disconnect the MQTT controller
-        controller.disconnect()
+            # Disconnect the MQTT controller
+            controller.disconnect()
 
-        # Stop the MQTT client loop
-        controller.client.loop_stop()
+            # Stop the MQTT client loop
+            controller.client.loop_stop()
+
+        except Exception as e:
+            print(f"Exception during cleanup: {e}")
 
 
 if __name__ == "__main__":

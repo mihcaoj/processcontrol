@@ -1,4 +1,3 @@
-import paho.mqtt.client as mqtt
 import time
 
 
@@ -10,9 +9,10 @@ class EmergencyStop:
 
     # Method to run the emergency stop process
     def run(self):
-        client_emergency = self.controller.client
-        client_emergency.on_connect = self.controller.on_connect
-        client_emergency.on_message = self.controller.on_message
+        with self.controller.emergency_flag_lock:
+            client_emergency = self.controller.client
+            client_emergency.on_connect = self.controller.on_connect
+            client_emergency.on_message = self.controller.on_message
 
         print(f"Connecting to broker at {self.controller.ip_address}:{self.controller.port} for emergency stop process")
         self.client_emergency.connect(self.controller.ip_address, port=self.controller.port)

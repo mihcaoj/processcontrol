@@ -1,5 +1,6 @@
 import paho.mqtt.client as mqtt
 import json
+import threading
 
 
 # Class for handling communication with Anki vehicles
@@ -12,11 +13,14 @@ class AnkiController:
         self.emergency_flag = False
         self.current_track = None
 
-        self.initialize()
+        # Create a lock for synchronizing access to emergency_flag
+        self.emergency_flag_lock = threading.Lock()
 
-    def initialize(self):
+        # Set the on_connect and on_message callbacks directly in the constructor
         self.client.on_connect = self.on_connect
         self.client.on_message = self.on_message
+
+        # Connect to the MQTT broker and start the client loop
         self.client.connect(self.ip_address, port=self.port)
         self.client.loop_start()
 
@@ -80,18 +84,20 @@ class AnkiController:
 
     @property  # Getter method for the emergency_flag property
     def emergency_flag(self):
-        return self._emergency_flag
+        with self.emergency_flag_lock:
+            return self._emergency_flag
 
-    @emergency_flag.setter  # Setter method for the emergency_flag property
+    @emergency_flag.setter  # Setter method for the emergency flag
     def emergency_flag(self, value):
-        self._emergency_flag = value
-        print(f"Emergency flag status changed to: {self._emergency_flag}")
+        with self.emergency_flag_lock:
+            self._emergency_flag = value
+            print(f"Emergency flag status changed to: {self._emergency_flag}")
 
     @property  # Getter method for the current_track property
     def current_track(self):
         return self._current_track
 
-    @current_track.setter # Setter method for the current_track property
+    @current_track.setter  # Setter method for the current_track property
     def current_track(self, value):
         self._current_track = value
         print(f"Current track ID changed to: {self._current_track}")

@@ -1,12 +1,22 @@
 import json
 import time
+import threading
+
+# Event objects to control the pause/resume of threads
+pause_drive_event = threading.Event()
+pause_lane_event = threading.Event()
 
 
 # Class for controlling the vehicles
 class VehicleControl:
     def __init__(self, controller):
         self.emergency_flag = False
+        self.emergency_flag_lock = controller.emergency_flag_lock
         self.controller = controller
+
+        # Assign these events as attributes of the controller
+        self.pause_drive_event = pause_drive_event
+        self.pause_lane_event = pause_lane_event
 
     def blink_lights(self, vehicle_id):
         payload_on = {
@@ -29,6 +39,9 @@ class VehicleControl:
             print(f"Start the blink on vehicle: {vehicle_id}")
 
             while True:
+                # Check if the drive thread is paused
+                self.pause_drive_event.wait()
+
                 self.controller.publish(f"Anki/Vehicles/U/{vehicle_id}/I/jb", payload_on)
                 print(f"Published: {payload_on} to {vehicle_id}")
                 time.sleep(1)
@@ -47,6 +60,9 @@ class VehicleControl:
             print(f"Start driving the car: {vehicle_id}")
 
             while True:
+                # Check if the drive thread is paused
+                self.pause_drive_event.wait()
+
                 if not self.controller.emergency_flag:
                     velocity = 500  # random.randint(-100, 2000)
                     acceleration = 500  # random.randint(0, 2000)
@@ -77,6 +93,9 @@ class VehicleControl:
             print(f"Driving interrupted. Stopping vehicle: " + vehicle_id)
 
             while True:
+                # Check if the lane change thread is paused
+                self.pause_lane_event.wait()
+
                 if not self.controller.emergency_flag:
                     offset = 500  # random.randint(-1000, 1000)
                     velocity = 500  # random.randint(0, 1000)
@@ -106,7 +125,10 @@ class VehicleControl:
             self.controller.disconnect()
 
     def stop_vehicle(self):
-        self.controller.stop_vehicle()
+        # sets the pause event to pause the drive_car and change_lane threads
+        print("Stopping vehicle: " + self.controller.vehicle_id)
+        self.controller.pause_drive_event.set()
+        self.controller.pause_lane_event.set()
 
     def publish(self, topic, payload):
         message = json.dumps(payload)
@@ -114,15 +136,18 @@ class VehicleControl:
         print(f"Published to topic {topic} with {payload}")
 
     def change_flag_status(self):
-        self.emergency_flag = not self.emergency_flag
-        print(f"Emergency flag status changed to: {self.emergency_flag}")
+        with self.emergency_flag_lock:
+            self.emergency_flag = not self.emergency_flag
+            print(f"Emergency flag status changed to: {self.emergency_flag}")
 
     def update_velocity(self, value):
-        # Method to handle velocity updates
-        print(f"Velocity updated to: {value}")
-        # TODO: Add logic to update the velocity
+        with self.emergency_flag_lock:
+            # Method to handle velocity updates
+            print(f"Velocity updated to: {value}")
+            # TODO: Add logic to update the velocity
 
     def update_acceleration(self, value):
-        # Method to handle acceleration updates
-        print(f"Acceleration updated to: {value}")
-        # TODO: Add logic to update the acceleration
+        with self.emergency_flag_lock:
+            # Method to handle acceleration updates
+            print(f"Acceleration updated to: {value}")
+            # TODO: Add logic to update the acceleration

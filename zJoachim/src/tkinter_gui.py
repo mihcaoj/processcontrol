@@ -4,6 +4,7 @@ import tkinter as tk
 class GUI:
     def __init__(self, vehicle_control):
         self.vehicle_control = vehicle_control
+        self.emergency_flag_lock = vehicle_control.emergency_flag_lock
         self.create_tkinter_window()
 
     def create_tkinter_window(self):
