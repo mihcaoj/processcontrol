@@ -17,7 +17,7 @@ track_topic = "Anki/Vehicles/U/" + vehicleID + "/E/track"
 
 # TODO: FIX DISCOVER METHOD
 # TODO: DISCONNECT ON SHUTDOWN
-# TODO: DIVIDE THE PROGRAM INTO MULTIPLE MODULABLE CLASSES
+
 # TODO: IMPLEMENT THE GUI SKELETON
 # TODO: IMPLEMENT THE LOGIC FOR THE GUI
 
@@ -262,7 +262,6 @@ pause_drive_event = threading.Event()
 pause_lane_event = threading.Event()
 
 # creation of the different threads
-
 emergency_thread = threading.Thread(target=emergency_stop_process)
 emergency_thread.start()
 
@@ -277,4 +276,4 @@ change_lane_thread.start()
 
 run_tkinter()
 
-client.loop_stop()  # stop the client
+client.loop_stop()
