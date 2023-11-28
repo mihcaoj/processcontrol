@@ -1,7 +1,7 @@
-package java_code.setup;
+package setup;
 
-import lecture08.messages.MessageHandler;
-import lecture08.messages.MessageListener;
+import messages.MessageHandler;
+import messages.MessageListener;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
 import org.json.simple.JSONObject;

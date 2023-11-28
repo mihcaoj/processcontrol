@@ -10,11 +10,14 @@ client = mqtt.Client('hyperdrive')
 ip_address = "192.168.4.1"
 port = "1883"
 # Anki vehicle nb:
-ankiID = "d11d2fea5c74" # "d716ea410e89"
+ankiID = "c40caf091413" # "d716ea410e89"
 # name of the topic of the host
-topicName = "jb"
+topicName = "elise"
 # boolean to make sure connexion is maintained
 wantToConnect: bool = False
+# boolean for the emergency stop
+needToStop: bool = False
+
 
 # ---------------------------- Connection etc --------------------------------------
 
@@ -96,7 +99,7 @@ def unsubscribe (client: mqtt):
 def publish(client: mqtt.Client, topic: str, payload: dict):
     message = json.dumps(payload)
     client.publish(topic, message)
-    print(f"Sent publish to topic {topic} with {payload}")
+    #print(f"Sent publish to topic {topic} with {payload}")
     # no error handling
 
 # ---------------------- Vehicle connection and discoverability -------------------------------
@@ -258,9 +261,101 @@ def backLightsOff(vehicleID):
     except Exception as e:
         print("Error turning the back lights off")
 
+# turn the all the lights off
+def allLightsOff(vehicleID):
+    payload = {
+        "type": "lights",
+        "payload": {
+            "back": "off",
+            "front":"off"
+        }
+    }
+
+    try:
+        print(f"Turning off all the lights on vehicle: {vehicleID}")
+
+        publish(client, "Anki/Vehicles/U/" + vehicleID + "/I/" + topicName,
+                payload)  # publish the json payload to turn off the lights
+        print(f"Published: {payload} to {vehicleID}")
+
+
+    except Exception as e:
+        print("Error turning all the lights off")
+
+
 #        drive commands -----------
 
+# drive at the speed and acceleration provided as argument. speed in mm/s, acceleration in mm/s^2
+def drive(vehicleID, speed: int, acceleration: int):
 
+    # checking if the requested speed is within the limits, if not, adjust it
+    lowerSpeedBound = -100
+    upperSpeedBound = 2000
+
+    if speed > upperSpeedBound:
+        #print(f"Driving at speed: {upperSpeedBound}. Requested speed: {speed} is too high (max = {upperSpeedBound})")
+        speed = upperSpeedBound
+    if speed < lowerSpeedBound:
+        #print(f"Driving at speed: {lowerSpeedBound}. Requested speed: {speed} is too low (min = {lowerSpeedBound})")
+        speed = lowerSpeedBound
+    #else:
+    #    print(f"Driving at speed: {speed}")
+
+    # checking if the requested acceleration is within the limits, if not, adjust it
+    lowerAccBound = 0
+    upperAccBound = 2000
+    if acceleration > upperAccBound:
+        #print(f"Setting acceleration to: {upperAccBound}. Requested acceleration: {acceleration} is too high (max = {upperAccBound})")
+        acceleration = upperAccBound
+    if acceleration < lowerAccBound:
+        #print(f"Setting acceleration to: {lowerAccBound}. Requested acceleration: {acceleration} is too low (min = {lowerAccBound})")
+        acceleration = lowerAccBound
+    #else:
+    #    print(f"Setting acceleration to: {acceleration}")
+
+    # defining the json payload
+    stringspeed = str(speed)
+    stringacc = str(acceleration)
+    payload = {
+            "type": "speed",
+            "payload": {
+                "velocity": stringspeed,
+                "acceleration": stringacc
+            }
+        }
+
+    # publishing the request
+    try:
+        publish(client, "Anki/Vehicles/U/" + vehicleID + "/I/" + topicName,
+                payload)  # publish the json payload to turn on the lights
+    except Exception as e:
+        print("Error making the vehicle drive")
+
+# stop the vehicle upon invocation
+def stopEmergency(vehicleID):
+    zero = str(0)
+    stopPayload= {
+        "type": "speed",
+        "payload": {
+            "velocity": zero,
+            "acceleration": zero
+        }
+    }
+    try:
+        publish(client, "Anki/Vehicles/U/" + vehicleID + "/I/" + topicName,
+                stopPayload)  # publish the json payload to turn on the lights
+    except Exception as e:
+        print("ERROR EMERGENCY STOPPING THE VEHICLE")
+
+
+# drive at the speed and acceleration passed as argument, stop if requested
+def autoDrive(vehicleID, speed: int, acceleration: int):
+
+    while True:
+        if not needToStop:
+            drive(vehicleID, speed, acceleration)
+        else:
+            stopEmergency(vehicleID)
 
 
 # ----------------------  function invokations ----------------------
@@ -268,11 +363,12 @@ def backLightsOff(vehicleID):
 # connect to the broker
 connect_broker()
 # make the host discoverable if it is not already
-#make_discoverable()
+make_discoverable()
 # subscribe to the broker
 subscribe(client)
 # connect to the right vehicle
 connect_vehicle()
 # operate commands on that vehicle
-blink_lights(ankiID)
+autoDrive(ankiID, 1000, 1000)
+#blink_lights(ankiID)
 
