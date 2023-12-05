@@ -133,7 +133,7 @@ def change_lane(vehicleID):
         print(f"Driving interrupted. Stopping vehicle: " + vehicleID)
 
         while True:
-            if not emergency_flag:
+            if not emergency_flag and not sliders_updated:
                 offset = 0
                 velocity = 300
                 acceleration = 300
@@ -166,6 +166,14 @@ def change_lane(vehicleID):
 def stop_vehicle():
     # sets the pause event to pause the drive_car and change_lane threads
     print("Stopping vehicle: " + vehicleID)
+    # If emergency_flag is True, set velocity and acceleration to stop the car
+    velocity = 0
+    acceleration = 0
+
+    payload_speed = {
+         "type": "speed", "payload": { "velocity": velocity, "acceleration": acceleration }}
+
+    publish(client, "Anki/Vehicles/U/" + vehicleID + "/I/jb", payload_speed)
     pause_drive_event.set()
     pause_lane_event.set()
 
@@ -194,7 +202,7 @@ def emergency_stop_process():
                 stop_vehicle()
             else:
                 current_time = time.time()
-                if current_time - last_print_time >= 15:
+                if current_time - last_print_time >= 5:
                     print("Emergency flag status: False.")
                     last_print_time = current_time
 
@@ -310,11 +318,11 @@ emergency_thread.start()
 blink_thread = threading.Thread(target=blink_lights, args=(vehicleID,))
 blink_thread.start()
 
-drive_thread = threading.Thread(target=drive_car, args=(vehicleID,))
-drive_thread.start()
+#drive_thread = threading.Thread(target=drive_car, args=(vehicleID,))
+#drive_thread.start()
 
-change_lane_thread = threading.Thread(target=change_lane, args=(vehicleID,))
-change_lane_thread.start()
+#change_lane_thread = threading.Thread(target=change_lane, args=(vehicleID,))
+#change_lane_thread.start()
 
 run_tkinter()
 
