@@ -3,6 +3,7 @@ import json
 import paho.mqtt.client as mqtt
 import time
 import asyncio #to make the functions asynchronous = that they can run simultaneously
+import tkinter as tk
 
 # create a client
 client = mqtt.Client('hyperdrive')
@@ -10,7 +11,7 @@ client = mqtt.Client('hyperdrive')
 ip_address = "192.168.4.1"
 port = "1883"
 # Anki vehicle nb:
-ankiID = "c40caf091413" # "d716ea410e89"
+ankiID = "cec233dec1cb" # "d716ea410e89"
 # name of the topic of the host
 topicName = "elise"
 # boolean to make sure connexion is maintained
@@ -284,7 +285,7 @@ def allLightsOff(vehicleID):
 
 
 #        drive commands -----------
-
+ 
 # drive at the speed and acceleration provided as argument. speed in mm/s, acceleration in mm/s^2
 def drive(vehicleID, speed: int, acceleration: int):
 
@@ -357,6 +358,44 @@ def autoDrive(vehicleID, speed: int, acceleration: int):
         else:
             stopEmergency(vehicleID)
 
+# ------------------------------------ GUI ---------------------------------------
+def change_flag_status():
+    global needToStop
+    needToStop = not needToStop
+
+#app_root = tk.Tk()
+#app_root.geometry('1080x720')
+async def run_tkinter():
+    #def create_tkinter_window():
+    # Create the main application window
+    app = tk.Tk()
+    app.title("Emergency Flag Controller")
+    app.geometry('720x480')
+
+    # Create a button to toggle the emergency flag
+    button = tk.Button(app, text="Toggle Emergency Flag", command=change_flag_status)
+    button.pack(pady=10)
+
+    app.mainloop()  # Run the Tkinter event loop
+
+'''    def start_tkinter():
+        app_root = tk.Tk()
+        app_ref.withdraw()
+        app_ref.after(0, create_tkinter_window)
+        app_ref.mainloop()
+
+    start_tkinter()
+
+
+    # Run the Tkinter window in a separate thread
+    tkinter_thread = threading.Thread(target=start_tkinter())
+    tkinter_thread.start()
+
+    # Keep a reference to the app so that it doesn't get garbage collected
+    return tkinter_thread '''
+
+
+
 
 # ----------------------  function invokations ----------------------
 
@@ -369,6 +408,17 @@ subscribe(client)
 # connect to the right vehicle
 connect_vehicle()
 # operate commands on that vehicle
-autoDrive(ankiID, 1000, 1000)
-#blink_lights(ankiID)
 
+'''async def main():
+    try:
+
+        await autoDrive(ankiID, 500, 500)
+        #await run_tkinter()
+    except KeyboardInterrupt:
+        #await stopEmergency(ankiID)
+        #await allLightsOff(ankiID)
+        #await disconnect_vehicle()
+        print("Interrupt received, cleaning up...")
+# blink_lights(ankiID)
+asyncio.run(main())'''
+autoDrive(ankiID, 500, 500)
