@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea/processcontrol.iml" filepath="$PROJECT_DIR$/.idea/processcontrol.iml" />
+      <module fileurl="file://$PROJECT_DIR$/zSeverine/zSeverine.iml" filepath="$PROJECT_DIR$/zSeverine/zSeverine.iml" />
     </modules>
   </component>
 </project>

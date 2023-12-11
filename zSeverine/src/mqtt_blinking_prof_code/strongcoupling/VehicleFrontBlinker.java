@@ -2,10 +2,10 @@ package mqtt_blinking_prof_code.strongcoupling;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import org.eclipse.paho.client.mqttv3.MqttException;
 
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
-import org.eclipse.paho.client.mqttv3.MqttException;
 
 public class VehicleFrontBlinker implements Runnable {
 

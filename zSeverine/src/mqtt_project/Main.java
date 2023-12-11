@@ -29,17 +29,23 @@ public class Main {
         setupVehicleManager.run();
 
         // Steering thread (controls the processes like the speed, lights, track offset,...)
-        Thread steeringThread = new Thread(new VehicleController(mqttHandler));
+        Thread steeringThread = new Thread(new SteeringControler(mqttHandler));
+
+        // Thread measuring all infos from vehicle
+        Thread infoThread = new Thread(new VehicleInfoModel(mqttHandler));
 
         // Start threads
         steeringThread.start();
+        infoThread.start();
 
         try {System.in.read();}
         catch (IOException e){
             e.getMessage();
             e.getStackTrace();
         }
+
         steeringThread.interrupt();
+        infoThread.interrupt();
     }
 }
 

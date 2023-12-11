@@ -42,7 +42,7 @@ public class SetupVehicleManager implements Runnable{
         this.vehicleStatusListener = new MessageListener(vehicleStatusTopic);
         this.mqttHandler.subscribe(vehicleStatusTopic, vehicleStatusListener);
 
-        parser = new JSONParser();
+        this.parser = new JSONParser();
     }
 
     public void run() {

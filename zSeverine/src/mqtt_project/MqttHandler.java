@@ -43,6 +43,10 @@ public class MqttHandler {
         topicPathByName.put("HostVehiclesStatus","Anki/Hosts/U/hyperdrive/S/vehicles");
         topicPathByName.put("singleVehicleIntent","Anki/Vehicles/U/"+vehicleId+"/I/"+clientId);
         topicPathByName.put("singleVehicleStatus","Anki/Vehicles/U/"+vehicleId+"/S/status");
+        topicPathByName.put("singleVehicleBatteryStatus", "Anki/Vehicles/U/"+vehicleId+"/S/battery");
+        topicPathByName.put("singleVehicleSpeedEvent", "Anki/Vehicles/U/"+vehicleId+"/E/speed");
+        topicPathByName.put("singleVehicleTrackEvent", "Anki/Vehicles/U/"+vehicleId+"/E/track");
+        topicPathByName.put("singleVehicleWheelDistanceEvent", "Anki/Vehicles/U/"+vehicleId+"/E/wheelDistance");
     }
 
     public void subscribe(String topic, MessageListener msgListener){

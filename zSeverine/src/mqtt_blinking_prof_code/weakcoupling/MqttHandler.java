@@ -1,9 +1,10 @@
 package mqtt_blinking_prof_code.weakcoupling;
 
-import java.util.HashSet;
-import java.util.Set;
 import org.eclipse.paho.client.mqttv3.*;
 import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
+
+import java.util.HashSet;
+import java.util.Set;
 
 public class MqttHandler {
 
