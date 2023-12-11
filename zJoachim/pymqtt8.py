@@ -4,12 +4,15 @@ import json
 import threading
 import tkinter as tk
 
-# TODO: - disconnect / cleanup
+# TODO:
+#        - disconnect / cleanup
 #        - add threads
+#        - track the tracks controller (final project part 0.2.3)
 #        - improve gui
 #        - put everything in a class
 #        - add battery level to GUI
-#        - Change lane right and left values need to be modified to work
+#        - change lane right and left values need to be modified to work
+#        - fix the slider for acceleration and velocity (values in between still seem to be published)
 
 ip_address = '192.168.4.1'  # ip address of the hyperdrive
 port = 1883  # port for MQTT
@@ -45,8 +48,7 @@ payload_off = {
 def on_connect(client, userdata, flags, rc):
     print(f"Connected with result code {rc}")
 
-    payload_discover = {"type": "discover",
-                        "payload": {"value": True}}
+    payload_discover = {"type": "discover", "payload": {"value": True}}
 
     publish(client, "Anki/Hosts/U/hyperdrive/I/", payload_discover)
     print("Published the discover payload successfully")
@@ -270,7 +272,7 @@ def run_tkinter():
         acceleration_slider.pack()
         acceleration_slider.bind("<ButtonRelease-1>", lambda event: sliders_released())
 
-        # Buttons for changing lane
+        # Buttons for changing lanes
         change_lane_frame = tk.Frame(app)
         change_lane_frame.pack(side=tk.TOP, pady=20)
 
@@ -280,16 +282,16 @@ def run_tkinter():
         button_right = tk.Button(change_lane_frame, text="Change Lane Right", command=change_lane_right)
         button_right.pack(side=tk.RIGHT, padx=5)
 
-        # Frame for lights buttons
+        # Frame for light buttons
         lights_frame = tk.Frame(app)
         lights_frame.pack(side=tk.TOP, pady=20)
 
-        # Button for turning lights off
+        # Button for turning the lights off
         button_off = tk.Button(lights_frame, text="Lights Off",
                                command=lambda: publish(client, "Anki/Vehicles/U/" + vehicleID + "/I/jb", payload_off))
         button_off.pack(side=tk.LEFT, padx=5)
 
-        # Button for turning lights on
+        # Button for turning the lights on
         button_on = tk.Button(lights_frame, text="Lights On",
                               command=lambda: publish(client, "Anki/Vehicles/U/" + vehicleID + "/I/jb", payload_on))
         button_on.pack(side=tk.RIGHT, padx=5)
