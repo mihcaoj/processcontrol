@@ -100,41 +100,6 @@ def blink_lights(vehicleID):
         client.disconnect()
 
 
-def change_lane(vehicleID):
-    try:
-        print("Driving interrupted. Stopping vehicle: " + vehicleID)
-
-        while True:
-            if not emergency_flag and not sliders_updated:
-                offset = 0
-                velocity = 300
-                acceleration = 300
-            else:
-                # If emergency_flag is True, set offset, velocity and acceleration to stop lane change
-                offset = 0
-                velocity = 0
-                acceleration = 0
-
-            payload_lane = {
-                "type": "lane",
-                "payload": {
-                    "offset": offset,
-                    "velocity": velocity,
-                    "acceleration": acceleration
-                }
-            }
-
-            publish(client, "Anki/Vehicles/U/" + vehicleID + "/I/jb", payload_lane)
-            print(f"Published lane change: {payload_lane}")
-
-            time.sleep(5)  # change lane every 5 seconds
-
-    except KeyboardInterrupt:
-        print("Lane change interrupted. Stopping vehicle: " + vehicleID)
-    finally:
-        client.disconnect()
-
-
 def change_lane_right():
     print("Changing to the right lane")
 
@@ -221,8 +186,8 @@ def emergency_stop_process():
         while True:
             time.sleep(1)  # check the emergency flag every second
             if emergency_flag:
-                blink_lights(vehicleID)
                 stop_vehicle()
+                blink_lights(vehicleID)
             else:
                 current_time = time.time()
                 if current_time - last_print_time >= 5:
