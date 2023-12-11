@@ -8,11 +8,13 @@ import tkinter as tk
 #        - add threads
 #        - improve gui
 #        - put everything in a class
+#        - add battery level to GUI
+#        - Change lane right and left values need to be modified to work
 
 ip_address = '192.168.4.1'  # ip address of the hyperdrive
 port = 1883  # port for MQTT
 client = mqtt.Client('hyperdrive')
-vehicleID = 'd205effe02cb'  # change according to the vehicle ID
+vehicleID = 'e10a07218a87'  # change according to the vehicle ID
 
 emergency_topic = "Anki/Emergency/U"  # path for emergency topic
 emergency_flag = False  # setting initial flag value to False
@@ -22,6 +24,7 @@ velocity_slider = None
 acceleration_slider = None
 sliders_updated = False
 
+# Payloads for the lights
 payload_on = {
     "type": "lights",
     "payload": {
@@ -66,6 +69,7 @@ def on_message(client, userdata, msg):
 
 def subscribe(client: mqtt.Client):
     client.subscribe("Anki/Vehicles/U/" + vehicleID + "/S/status")  # subscribe to the status of the vehicle
+    client.subscribe("Anki/Vehicles/U/" + vehicleID + "/S/battery")  # subscribe to the battery topic
     client.on_message = on_message
 
 
@@ -234,7 +238,7 @@ def emergency_stop_process():
 def update_velocity_slider(value):
     global sliders_updated
     if velocity_slider:
-        velocity_slider.set(int(value))
+        # velocity_slider.set(int(value))
 
         sliders_updated = True
 
@@ -252,7 +256,7 @@ def update_velocity_slider(value):
 def update_acceleration_slider(value):
     global sliders_updated
     if acceleration_slider:
-        acceleration_slider.set(int(value))
+        # acceleration_slider.set(int(value))
 
         sliders_updated = True
 
@@ -264,6 +268,11 @@ def update_acceleration_slider(value):
         }
         publish(client, f"Anki/Vehicles/U/{vehicleID}/I/jb", payload_acceleration)
         print(f"Acceleration updated to: {value}")
+
+
+def sliders_released():
+    global sliders_updated
+    sliders_updated = False
 
 
 def run_tkinter():
@@ -284,6 +293,7 @@ def run_tkinter():
                                    orient=tk.HORIZONTAL,
                                    command=update_velocity_slider)
         velocity_slider.pack()
+        velocity_slider.bind("<ButtonRelease-1>", lambda event: sliders_released())
 
         # Slider for changing the acceleration
         acceleration_label = tk.Label(app, text="Acceleration:")
@@ -293,6 +303,7 @@ def run_tkinter():
                                        command=update_acceleration_slider)
 
         acceleration_slider.pack()
+        acceleration_slider.bind("<ButtonRelease-1>", lambda event: sliders_released())
 
         # Buttons for changing lane
         change_lane_frame = tk.Frame(app)
