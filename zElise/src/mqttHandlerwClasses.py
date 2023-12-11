@@ -11,14 +11,19 @@ client = mqtt.Client('hyperdrive')
 ip_address = "192.168.4.1"
 port = "1883"
 # Anki vehicle nb:
-ankiID = "cec233dec1cb" # "d716ea410e89"
+ankiID = "e10a07218a87" # "d716ea410e89"
 # name of the topic of the host
 topicName = "elise"
 # boolean to make sure connexion is maintained
 wantToConnect: bool = False
 # boolean for the emergency stop
-needToStop: bool = False
+emergency: bool = False
 
+# TODO: CHECK FOR CONNECTION BC NOW IT TRIES TO CONNECT ONCE BUT IF IT FAILS ITS DONE
+# PUT EVERYTHING IN A CLASS
+# FIX GUI SHOWING UP AT RIGHT MOMENT
+# FIX ASYNC
+# DO EMERGENCY STOP
 
 # ---------------------------- Connection etc --------------------------------------
 
@@ -27,7 +32,7 @@ def connect_broker():
     client.connect(ip_address)
     global wantToConnect
     wantToConnect = not wantToConnect
-    print("Connected to broker: ",ip_address,":",port)
+    #print("Connected to broker: ",ip_address,":",port)
 
 # ON CONNECT to handle eventually failed connection
 
@@ -44,7 +49,7 @@ def on_connect(client, userdata, flags, rc):
                 connect_broker()
                 publish(client, "Anki/Vehicles/U/" + ankiID + "/S/status", {"value": "connected"})
             except Exception as e:
-                print("Reconnection attempt failed. Please try reconnect manually")
+                on_connect(client, userdata, flags, 1)
 
 #make sure on_connect is invoked automatically
 client.on_connect = on_connect
@@ -80,6 +85,7 @@ def subscribe (client: mqtt):
     # handles messages
     def on_message(client, userdata, msg):
         print("Received {message} from {topic} topic".format(message=msg.payload.decode(), topic=msg.topic))
+
     client.on_message = on_message
 
 #ON_SUBSCRIBE to check subscription status (callback)
@@ -285,7 +291,7 @@ def allLightsOff(vehicleID):
 
 
 #        drive commands -----------
- 
+
 # drive at the speed and acceleration provided as argument. speed in mm/s, acceleration in mm/s^2
 def drive(vehicleID, speed: int, acceleration: int):
 
@@ -314,6 +320,10 @@ def drive(vehicleID, speed: int, acceleration: int):
     #else:
     #    print(f"Setting acceleration to: {acceleration}")
 
+    if emergency:
+        speed = 0
+        acceleration = 0
+
     # defining the json payload
     stringspeed = str(speed)
     stringacc = str(acceleration)
@@ -327,13 +337,13 @@ def drive(vehicleID, speed: int, acceleration: int):
 
     # publishing the request
     try:
-        publish(client, "Anki/Vehicles/U/" + vehicleID + "/I/" + topicName,
-                payload)  # publish the json payload to turn on the lights
+        while True:
+            publish(client, "Anki/Vehicles/U/" + vehicleID + "/I/" + topicName, payload)  # publish the json payload to turn on the lights
     except Exception as e:
         print("Error making the vehicle drive")
 
 # stop the vehicle upon invocation
-def stopEmergency(vehicleID):
+'''def stopEmergency(vehicleID):
     zero = str(0)
     stopPayload= {
         "type": "speed",
@@ -347,25 +357,26 @@ def stopEmergency(vehicleID):
                 stopPayload)  # publish the json payload to turn on the lights
     except Exception as e:
         print("ERROR EMERGENCY STOPPING THE VEHICLE")
-
+'''
 
 # drive at the speed and acceleration passed as argument, stop if requested
-def autoDrive(vehicleID, speed: int, acceleration: int):
+'''def autoDrive(vehicleID, speed: int, acceleration: int):
 
     while True:
         if not needToStop:
             drive(vehicleID, speed, acceleration)
         else:
             stopEmergency(vehicleID)
+'''
 
 # ------------------------------------ GUI ---------------------------------------
 def change_flag_status():
-    global needToStop
-    needToStop = not needToStop
+    global emergency
+    emergency = not emergency
 
 #app_root = tk.Tk()
 #app_root.geometry('1080x720')
-async def run_tkinter():
+def run_tkinter():
     #def create_tkinter_window():
     # Create the main application window
     app = tk.Tk()
@@ -376,6 +387,7 @@ async def run_tkinter():
     button = tk.Button(app, text="Toggle Emergency Flag", command=change_flag_status)
     button.pack(pady=10)
 
+    #while True:
     app.mainloop()  # Run the Tkinter event loop
 
 '''    def start_tkinter():
@@ -410,15 +422,19 @@ connect_vehicle()
 # operate commands on that vehicle
 
 '''async def main():
+    # while
     try:
-
         await autoDrive(ankiID, 500, 500)
-        #await run_tkinter()
+        await run_tkinter()
     except KeyboardInterrupt:
         #await stopEmergency(ankiID)
         #await allLightsOff(ankiID)
         #await disconnect_vehicle()
         print("Interrupt received, cleaning up...")
-# blink_lights(ankiID)
-asyncio.run(main())'''
-autoDrive(ankiID, 500, 500)
+        '''
+#run_tkinter()
+drive(ankiID, 500, 500)
+#blink_lights(ankiID)
+#asyncio.run(main())
+#await run_tkinter()
+#autoDrive(ankiID, 500, 500)

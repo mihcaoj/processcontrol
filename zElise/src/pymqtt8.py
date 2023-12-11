@@ -4,6 +4,11 @@ import json
 import threading
 import tkinter as tk
 
+# TODO: - disconnect / cleanup
+#        - add threads
+#        - improve gui
+#        - put everything in a class
+
 ip_address = '192.168.4.1'  # ip address of the hyperdrive
 port = 1883  # port for MQTT
 client = mqtt.Client('hyperdrive')
@@ -16,6 +21,22 @@ emergency_flag = False  # setting initial flag value to False
 velocity_slider = None
 acceleration_slider = None
 sliders_updated = False
+
+payload_on = {
+    "type": "lights",
+    "payload": {
+        "back": "on",
+        "front": "on"
+    }
+}
+
+payload_off = {
+    "type": "lights",
+    "payload": {
+        "back": "off",
+        "front": "off"
+    }
+}
 
 
 def on_connect(client, userdata, flags, rc):
@@ -55,22 +76,6 @@ def publish(client: mqtt.Client, topic: str, payload: dict):
 
 
 def blink_lights(vehicleID):
-    payload_on = {
-        "type": "lights",
-        "payload": {
-            "back": "on",
-            "front": "on"
-        }
-    }
-
-    payload_off = {
-        "type": "lights",
-        "payload": {
-            "back": "off",
-            "front": "off"
-        }
-    }
-
     try:
         print(f"Start the blink on vehicle: {vehicleID}")
 
@@ -91,46 +96,9 @@ def blink_lights(vehicleID):
         client.disconnect()
 
 
-def drive_car(vehicleID):
-    global sliders_updated
-    try:
-        print(f"Start driving the car: {vehicleID}")
-
-        while True:
-            if not emergency_flag and not sliders_updated:
-                # set initial values for velocity and acceleration
-                velocity = 300
-                acceleration = 300
-            else:
-                # If emergency_flag is True, set velocity and acceleration to stop the car
-                velocity = 0
-                acceleration = 0
-
-            payload_speed = {
-                "type": "speed",
-                "payload": {
-                    "velocity": velocity,
-                    "acceleration": acceleration
-                }
-            }
-
-            publish(client, "Anki/Vehicles/U/" + vehicleID + "/I/jb", payload_speed)
-            print(f"Published speed: {payload_speed}")
-
-            time.sleep(3)  # change velocity every 3 seconds
-
-            # Reset the sliders_updated flag
-            sliders_updated = False
-
-    except KeyboardInterrupt:
-        print("Driving interrupted. Stopping the car.")
-    finally:
-        client.disconnect()
-
-
 def change_lane(vehicleID):
     try:
-        print(f"Driving interrupted. Stopping vehicle: " + vehicleID)
+        print("Driving interrupted. Stopping vehicle: " + vehicleID)
 
         while True:
             if not emergency_flag and not sliders_updated:
@@ -158,14 +126,72 @@ def change_lane(vehicleID):
             time.sleep(5)  # change lane every 5 seconds
 
     except KeyboardInterrupt:
-        print("Lane change interrupted. Stopping vehichle: " + vehicleID)
+        print("Lane change interrupted. Stopping vehicle: " + vehicleID)
     finally:
         client.disconnect()
+
+
+def change_lane_right():
+    print("Changing to the right lane")
+
+    if not emergency_flag and not sliders_updated:
+        offset = 750
+        velocity = 250
+        acceleration = 250
+    else:
+        # If emergency_flag is True, set offset, velocity and acceleration to stop lane change
+        offset = 0
+        velocity = 0
+        acceleration = 0
+
+    payload_lane = {
+        "type": "lane",
+        "payload": {
+            "offset": offset,
+            "velocity": velocity,
+            "acceleration": acceleration
+        }
+    }
+
+    publish(client, "Anki/Vehicles/U/" + vehicleID + "/I/jb", payload_lane)
+
+
+def change_lane_left():
+    print("Changing to the left lane")
+
+    if not emergency_flag and not sliders_updated:
+        offset = -750
+        velocity = 250
+        acceleration = 250
+    else:
+        # If emergency_flag is True, set offset, velocity and acceleration to stop lane change
+        offset = 0
+        velocity = 0
+        acceleration = 0
+
+    payload_lane = {
+        "type": "lane",
+        "payload": {
+            "offset": offset,
+            "velocity": velocity,
+            "acceleration": acceleration
+        }
+    }
+
+    publish(client, "Anki/Vehicles/U/" + vehicleID + "/I/jb", payload_lane)
 
 
 def stop_vehicle():
     # sets the pause event to pause the drive_car and change_lane threads
     print("Stopping vehicle: " + vehicleID)
+    # If emergency_flag is True, set velocity and acceleration to stop the car
+    velocity = 0
+    acceleration = 0
+
+    payload_speed = {
+        "type": "speed", "payload": {"velocity": velocity, "acceleration": acceleration}}
+
+    publish(client, "Anki/Vehicles/U/" + vehicleID + "/I/jb", payload_speed)
     pause_drive_event.set()
     pause_lane_event.set()
 
@@ -191,6 +217,7 @@ def emergency_stop_process():
         while True:
             time.sleep(1)  # check the emergency flag every second
             if emergency_flag:
+                blink_lights(vehicleID)
                 stop_vehicle()
             else:
                 current_time = time.time()
@@ -253,7 +280,7 @@ def run_tkinter():
         # Slider for changing the velocity
         velocity_label = tk.Label(app, text="Velocity")
         velocity_label.pack()
-        velocity_slider = tk.Scale(app, from_=0, to=100,
+        velocity_slider = tk.Scale(app, from_=-100, to=2000,
                                    orient=tk.HORIZONTAL,
                                    command=update_velocity_slider)
         velocity_slider.pack()
@@ -261,11 +288,35 @@ def run_tkinter():
         # Slider for changing the acceleration
         acceleration_label = tk.Label(app, text="Acceleration:")
         acceleration_label.pack()
-        acceleration_slider = tk.Scale(app, from_=0, to=100,
+        acceleration_slider = tk.Scale(app, from_=0, to=2000,
                                        orient=tk.HORIZONTAL,
                                        command=update_acceleration_slider)
 
         acceleration_slider.pack()
+
+        # Buttons for changing lane
+        change_lane_frame = tk.Frame(app)
+        change_lane_frame.pack(side=tk.TOP, pady=20)
+
+        button_left = tk.Button(change_lane_frame, text="Change Lane Left", command=change_lane_left)
+        button_left.pack(side=tk.LEFT, padx=5)
+
+        button_right = tk.Button(change_lane_frame, text="Change Lane Right", command=change_lane_right)
+        button_right.pack(side=tk.RIGHT, padx=5)
+
+        # Frame for lights buttons
+        lights_frame = tk.Frame(app)
+        lights_frame.pack(side=tk.TOP, pady=20)
+
+        # Button for turning lights off
+        button_off = tk.Button(lights_frame, text="Lights Off",
+                               command=lambda: publish(client, "Anki/Vehicles/U/" + vehicleID + "/I/jb", payload_off))
+        button_off.pack(side=tk.LEFT, padx=5)
+
+        # Button for turning lights on
+        button_on = tk.Button(lights_frame, text="Lights On",
+                              command=lambda: publish(client, "Anki/Vehicles/U/" + vehicleID + "/I/jb", payload_on))
+        button_on.pack(side=tk.RIGHT, padx=5)
 
         app.mainloop()  # Run the Tkinter event loop
 
@@ -306,15 +357,6 @@ pause_lane_event = threading.Event()
 # creation of the different threads
 emergency_thread = threading.Thread(target=emergency_stop_process)
 emergency_thread.start()
-
-blink_thread = threading.Thread(target=blink_lights, args=(vehicleID,))
-blink_thread.start()
-
-drive_thread = threading.Thread(target=drive_car, args=(vehicleID,))
-drive_thread.start()
-
-change_lane_thread = threading.Thread(target=change_lane, args=(vehicleID,))
-change_lane_thread.start()
 
 run_tkinter()
 
