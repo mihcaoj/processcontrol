@@ -9,6 +9,8 @@ public class SteeringModel extends Observable {
     private String wishedFrontLightStatus;
     private String wishedBackLightStatus;
     private int wishedSpeed;
+    private int minSpeed;
+    private int maxSpeed;
     private int wishedLaneOffset;
 
     public SteeringModel(){
@@ -68,4 +70,6 @@ public class SteeringModel extends Observable {
         setChanged();
         notifyObservers("back lights status");
     }
+
+
 }

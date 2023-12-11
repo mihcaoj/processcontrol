@@ -5,9 +5,8 @@ import org.eclipse.paho.client.mqttv3.MqttException;
 import java.util.Observable;
 import java.util.Observer;
 
-public class SteeringController implements Observer {
+public class SteeringController implements Observer, Runnable{
     private final SteeringModel steeringModel;
-    private final View view;
     private final MqttHandler mqttHandler;
     private final String vehicleIntentTopic;
 
@@ -15,7 +14,6 @@ public class SteeringController implements Observer {
         this.mqttHandler = mqttHandler;
         this.vehicleIntentTopic = mqttHandler.topicPathByName.get("singleVehicleIntent");
         this.steeringModel = steeringModel;
-        this.view = view;
         this.steeringModel.addObserver(this);
     }
 
@@ -41,9 +39,14 @@ public class SteeringController implements Observer {
             try {
                 mqttHandler.publish(vehicleIntentTopic, msg);
             } catch (MqttException e){
-                e.getMessage();
+                System.out.println(e.getMessage());
                 e.getStackTrace();
             }
         }
+    }
+
+    @Override
+    public void run() {
+
     }
 }

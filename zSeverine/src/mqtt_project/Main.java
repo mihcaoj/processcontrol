@@ -28,11 +28,19 @@ public class Main {
         SetupVehicleManager setupVehicleManager = new SetupVehicleManager(mqttHandler);
         setupVehicleManager.run();
 
+        // MVC pattern split in two with a common view
+        SteeringModel steeringModel = new SteeringModel();
+        VehicleInfoModel vehicleInfoModel = new VehicleInfoModel();
+
+        View view = new View(steeringModel, vehicleInfoModel);
+
+        SteeringController steeringController = new SteeringController(mqttHandler, steeringModel, view);
+        VehicleInfoController vehicleInfoController = new VehicleInfoController(mqttHandler, vehicleInfoModel, view);
         // Steering thread (controls the processes like the speed, lights, track offset,...)
-        Thread steeringThread = new Thread(new SteeringControler(mqttHandler));
+        Thread steeringThread = new Thread(steeringController);
 
         // Thread measuring all infos from vehicle
-        Thread infoThread = new Thread(new VehicleInfoModel(mqttHandler));
+        Thread infoThread = new Thread(vehicleInfoController);
 
         // Start threads
         steeringThread.start();
@@ -40,7 +48,7 @@ public class Main {
 
         try {System.in.read();}
         catch (IOException e){
-            e.getMessage();
+            System.out.println(e.getMessage());
             e.getStackTrace();
         }
 
