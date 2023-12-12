@@ -2,6 +2,8 @@ package mqtt_project;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.util.Observable;
 import java.util.Observer;
 
@@ -33,60 +35,96 @@ public class View extends JFrame implements Observer {
         initializeComponents();
     }
     public void update(Observable o, Object arg) {
-        this.trackIdLabel.setText("Current track ID: "+this.vehicleInfoModel.getCurrentTrackId());
-        this.turningStatusLabel.setText("Turning track: "+ this.vehicleInfoModel.getTurningStatus());
         repaint();
     }
 
     public void initializeComponents(){
         this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         this.setLocationRelativeTo(null);
-        this.setLayout(new GridLayout(2, 2));
+        this.setLayout(new GridLayout(2, 1));
+
+        JPanel steeringPanel = new JPanel();
+        JPanel infoPanel = new JPanel();
+        this.add(steeringPanel);
+        this.add(infoPanel);
+
+        // ===== STEERING PANEL =====
+        steeringPanel.setLayout(new GridLayout(1,3));
+        JPanel scrollBarsPanel = new JPanel();
+        JPanel emergencyPanel = new JPanel();
+        emergencyPanel.setPreferredSize(new Dimension(200,200));
+        JPanel lightsPanel = new JPanel();
+        steeringPanel.add(scrollBarsPanel);
+        steeringPanel.add(emergencyPanel);
+        steeringPanel.add(lightsPanel);
+
+        // -- Scroll bars panel --
+        JPanel speedPanel = new JPanel();
+        JPanel laneOffsetPanel = new JPanel();
+        scrollBarsPanel.setLayout(new GridLayout(2,1));
+        scrollBarsPanel.add(speedPanel);
+        scrollBarsPanel.add(laneOffsetPanel);
 
         // Speed control
-        JPanel speedPanel = new JPanel();
+        speedPanel.setLayout(new GridLayout(3,1));
         int wishedSpeed = steeringModel.getWishedSpeed();
         this.wishedSpeedLabel = new JLabel();
         this.wishedSpeedLabel.setHorizontalAlignment(JLabel.CENTER);
         updateWishedSpeedLabel(wishedSpeed);
         this.measuredSpeedLabel = new JLabel();
         this.measuredSpeedLabel.setHorizontalAlignment(JLabel.CENTER);
-        updateEffectiveSpeedLabel(vehicleInfoModel.getMeasuredSpeed());
+        updateMeasuredSpeedLabel(vehicleInfoModel.getMeasuredSpeed());
         this.speedSlider = new JSlider(JSlider.HORIZONTAL, wishedSpeed);
-        speedSlider.addChangeListener(e -> {
-            int speedValue = speedSlider.getValue();
-            steeringModel.setWishedSpeed(speedValue);
-            updateWishedSpeedLabel(speedValue);
+        speedSlider.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseReleased(MouseEvent e) {
+                int speedValue = speedSlider.getValue();
+                steeringModel.setWishedSpeed(speedValue);
+                updateWishedSpeedLabel(speedValue);
+            }
         });
         speedPanel.add(wishedSpeedLabel);
         speedPanel.add(measuredSpeedLabel);
         speedPanel.add(speedSlider);
 
         // Lane offset control
+        laneOffsetPanel.setLayout(new GridLayout(2,1));
         int wishedLaneOffset = steeringModel.getWishedLaneOffset();
-        JPanel laneOffsetPanel = new JPanel();
         this.laneOffsetLabel = new JLabel("Wished lane offset: "+wishedLaneOffset);
         this.laneOffsetLabel.setHorizontalAlignment(JLabel.CENTER);
         this.laneOffsetSlider = new JSlider(JSlider.HORIZONTAL, wishedLaneOffset);
-        laneOffsetSlider.addChangeListener(e -> {
-            int laneOffsetValue = laneOffsetSlider.getValue();
-            // Update the wished lane offset in the steering model
-            steeringModel.setWishedLaneOffset(laneOffsetValue);
-            updateLaneOffsetLabel(laneOffsetValue);
+        laneOffsetSlider.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseReleased(MouseEvent e) {
+                int laneOffsetSliderValue = laneOffsetSlider.getValue();
+                steeringModel.setWishedLaneOffset(laneOffsetSliderValue);
+                updateLaneOffsetLabel(laneOffsetSliderValue);
+            }
         });
         laneOffsetPanel.add(laneOffsetLabel);
         laneOffsetPanel.add(laneOffsetSlider);
-
         setMinMaxSpeedLaneOffset();
 
+        // Emergency control
+        this.emergencyToggleButton = new JToggleButton("Activate emergency");
+        this.emergencyToggleButton.setPreferredSize(new Dimension(180, 50));
+        emergencyToggleButton.addActionListener(e -> {
+            boolean emergency = emergencyToggleButton.isSelected();
+            String text = emergency ? "Deactivate emergency": "Activate emergency";
+            this.emergencyToggleButton.setText(text);
+            this.steeringModel.setEmergency(emergencyToggleButton.isSelected());
+        });
+        emergencyPanel.add(emergencyToggleButton);
+
         // Lights control
-        JPanel lightsPanel = new JPanel(new FlowLayout());
+        lightsPanel.setLayout(new GridLayout(0,1));
 
         JPanel frontLightsPanel = new JPanel(new FlowLayout());
         frontLightsPanel.add(new JLabel("Front lights"));
         ButtonGroup frontLightsButtonGroup = new ButtonGroup();
         JRadioButton frontLightsOnButton = new JRadioButton("On");
         JRadioButton frontLightsOffButton = new JRadioButton("Off");
+        frontLightsOffButton.setSelected(true);
         frontLightsButtonGroup.add(frontLightsOnButton);
         frontLightsButtonGroup.add(frontLightsOffButton);
         frontLightsPanel.add(frontLightsOnButton);
@@ -100,6 +138,7 @@ public class View extends JFrame implements Observer {
         ButtonGroup backLightsButtonGroup = new ButtonGroup();
         JRadioButton backLightsOnButton = new JRadioButton("On");
         JRadioButton backLightsOffButton = new JRadioButton("Off");
+        backLightsOffButton.setSelected(true);
         JRadioButton backLightsFlickerButton = new JRadioButton("Flicker");
         backLightsButtonGroup.add(backLightsOnButton);
         backLightsButtonGroup.add(backLightsOffButton);
@@ -109,40 +148,31 @@ public class View extends JFrame implements Observer {
         backLightsPanel.add(backLightsFlickerButton);
         lightsPanel.add(backLightsPanel);
         backLightsOnButton.addActionListener(e -> this.steeringModel.setWishedBackLightStatus("on"));
-
         backLightsOffButton.addActionListener(e -> this.steeringModel.setWishedBackLightStatus("off"));
-
         backLightsFlickerButton.addActionListener(e -> this.steeringModel.setWishedBackLightStatus("flicker"));
 
-        // Emergency control
-        this.emergencyToggleButton = new JToggleButton("Activate emergency");
-        emergencyToggleButton.addActionListener(e -> {
-            boolean emergency = emergencyToggleButton.isSelected();
-            String text = emergency ? "Deactivate emergency": "Activate emergency";
-            this.emergencyToggleButton.setText(text);
-            this.steeringModel.setEmergency(emergencyToggleButton.isSelected());
-        });
 
-        // Vehicle information
-        JPanel infoPanel = new JPanel();
+        // ====== VEHICLE INFO PANEL =======
+        infoPanel.setLayout(new GridLayout(0,3));
         this.trackIdLabel = new JLabel();
+        this.trackIdLabel.setHorizontalAlignment(JLabel.CENTER);
         updateTrackIdLabel(this.vehicleInfoModel.getCurrentTrackId());
         this.turningStatusLabel = new JLabel();
+        this.turningStatusLabel.setHorizontalAlignment(JLabel.CENTER);
         updateTurningStatusLabel(this.vehicleInfoModel.getTurningStatus());
         this.batteryLevelLabel = new JLabel();
+        this.batteryLevelLabel.setHorizontalAlignment(JLabel.CENTER);
         this.lowBatteryLabel = new JLabel();
+        this.lowBatteryLabel.setHorizontalAlignment(JLabel.CENTER);
         this.lowBatteryLabel.setText("!! LOW BATTERY -> Reduced speed !!");
         updateBatteryLevelLabel(this.vehicleInfoModel.getBatteryLevel());
         infoPanel.add(trackIdLabel);
         infoPanel.add(turningStatusLabel);
-        infoPanel.add(batteryLevelLabel);
-        infoPanel.add(lowBatteryLabel);
-
-        add(speedPanel);
-        add(laneOffsetPanel);
-        add(lightsPanel);
-        add(emergencyToggleButton);
-        add(infoPanel);
+        JPanel batteryPanel = new JPanel();
+        batteryPanel.setLayout(new GridLayout(0,1));
+        batteryPanel.add(batteryLevelLabel);
+        batteryPanel.add(lowBatteryLabel);
+        infoPanel.add(batteryPanel);
 
         pack();
         setVisible(true);
@@ -152,8 +182,8 @@ public class View extends JFrame implements Observer {
         wishedSpeedLabel.setText("Wished speed: " + wishedSpeed);
     }
 
-    public void updateEffectiveSpeedLabel(int effectiveSpeed) {
-        measuredSpeedLabel.setText("Effective speed: " + effectiveSpeed);
+    public void updateMeasuredSpeedLabel(int measuredSpeed) {
+        measuredSpeedLabel.setText("Measured speed: " + measuredSpeed);
     }
 
     public void updateLaneOffsetLabel(int laneOffsetValue){
@@ -161,11 +191,11 @@ public class View extends JFrame implements Observer {
     }
 
     public void updateTrackIdLabel(int trackId){
-        laneOffsetLabel.setText("Current track ID: "+trackId);
+        trackIdLabel.setText("Current track ID: "+trackId);
     }
 
     public void updateTurningStatusLabel(boolean turningStatus){
-        laneOffsetLabel.setText("Turning track: " + turningStatus);
+        turningStatusLabel.setText("Turning track: " + turningStatus);
     }
 
     public void updateBatteryLevelLabel(int batteryLevel){
