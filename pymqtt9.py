@@ -15,9 +15,9 @@ import tkinter as tk
 client = mqtt.Client('hyperdrive')
 # ip address - BROKER
 ip_address = "192.168.4.1"
-port = "1883"
+port = 1883
 # Anki vehicle nb:
-vehicleID = "e10a07218a87"  # "d716ea410e89"
+vehicleID = "ec4a0ca4bd82" 
 # name of the topic of the host
 topicName = "jb"
 # boolean to make sure connexion is maintained
@@ -130,6 +130,9 @@ client.on_disconnect = on_disconnect
 # def handling messages
 def on_message(client, userdata, msg):
     print("Received {message} from {topic} topic".format(message=msg.payload.decode(), topic=msg.topic))
+
+    global emergency_flag, battery_level, current_track_id
+    
     # track when the vehicle looses connection
     if msg.payload.decode() == 'lost':
         global subscribed
@@ -632,7 +635,7 @@ make_discoverable()
 # client.loop_start()
 
 # subscribe to the broker
-subscribe(client)
+subscribe(client) 
 # connect to the right vehicle
 connect_vehicle()
 # operate commands on that vehicle
@@ -641,7 +644,7 @@ connect_vehicle()
 emergency_thread = threading.Thread(target=emergency_stop_process)
 emergency_thread.start()
 
-blink_thread = threading.Thread(target=blink_lights, args=(vehicleID))
+blink_thread = threading.Thread(target=blink_lights, args=(vehicleID,))
 blink_thread.start()
 
 # run the GUI
