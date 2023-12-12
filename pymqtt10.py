@@ -6,8 +6,10 @@ import threading  # to make the functions asynchronous = that they can run simul
 import tkinter as tk
 
 # TODO: - disconnect / cleanup
-#        - add threads
+#        - slider + bounds DONE
+#        - add threads DONE
 #        - improve gui
+#        / NOT NECESSARY - put everything in a class
 #        - handle errors when publishing (in publish functions) + check error handling  @ vehicle connection
 #        - fix the buttons w/ the payload
 
@@ -15,9 +17,9 @@ import tkinter as tk
 client = mqtt.Client('hyperdrive')
 # ip address - BROKER
 ip_address = "192.168.4.1"
-port = "1883"
+port = 1883
 # Anki vehicle nb:
-vehicleID = "e10a07218a87"  # "d716ea410e89"
+vehicleID = "a  "  # "d716ea410e89"
 # name of the topic of the host
 topicName = "jb"
 # boolean to make sure connexion is maintained
@@ -33,12 +35,7 @@ velocity_slider = None
 acceleration_slider = None
 sliders_updated = False
 
-battery_label = None
-battery_level = 0
-current_track_id = None
-LOW_BATTERY_THRESHOLD = 20
-
-# flags for the reconnection
+#flags for the reconnection
 connectflags = ""
 
 # TODO: remove that
@@ -65,9 +62,8 @@ payload_off = {
 def connect_broker():
     client.connect(ip_address)
     global wantToConnect
-    wantToConnect = True  # flag to handle automatic reconnection
+    wantToConnect = True # flag to handle automatic reconnection
     print(f"Trying to connect to broker {ip_address}:{port}")
-
 
 # ON CONNECT to handle eventually failed connection
 def on_connect(client, userdata, flags, rc):
@@ -77,17 +73,15 @@ def on_connect(client, userdata, flags, rc):
         print(f"Succesfully connected to broker at {ip_address}:{port}")
     else:
         print("Connection failed")
-        if wantToConnect:
+        if (wantToConnect == True):
             print("Attempting reconnection to broker: ", ip_address, ":", port)
             try:
                 connect_broker()
             except Exception as e:
                 on_connect(client, userdata, connectflags, 1)
 
-
-# make sure on_connect is invoked automatically
+#make sure on_connect is invoked automatically
 client.on_connect = on_connect
-
 
 # DISCONNECT from the broker
 def disconnect_broker():
@@ -96,14 +90,13 @@ def disconnect_broker():
     wantToConnect = False
     print(f"Disconnecting from broker ... {ip_address}:{port}")
 
-
 # handle disconnection again if it fails
 def on_disconnect(client, userdata, rc):
     global wantToConnect
     global subscribed
     subscribed = False
-    if wantToConnect:
-        print("Attempting reconnection to broker: ", ip_address, ":", port)
+    if wantToConnect == True:
+        print("Attempting reconnection to broker: ",ip_address,":",port)
         try:
             connect_broker()
         except Exception as e:
@@ -121,12 +114,10 @@ def on_disconnect(client, userdata, rc):
                 except Exception as e:
                     on_disconnect(client, userdata, 1)
 
-
-# make sure on_disconnect is invoked automatically
+#make sure on_disconnect is invoked automatically
 client.on_disconnect = on_disconnect
 
-
-# ------------------------------ Publish, subscribe and mqtt functions -----------------------------------
+#------------------------------ Publish, subscribe and mqtt functions -----------------------------------
 # def handling messages
 def on_message(client, userdata, msg):
     print("Received {message} from {topic} topic".format(message=msg.payload.decode(), topic=msg.topic))
@@ -139,31 +130,15 @@ def on_message(client, userdata, msg):
         global emergency_flag
         emergency_flag = True
         print(f"Emergency flag is set to {emergency_flag}")
-    elif msg.topic == "Anki/Vehicles/U/" + vehicleID + "/S/battery":
-        battery_value = payload.get("value", 0)
-        print(f"Battery value is {battery_value}")
-        battery_level = battery_value
 
-        if battery_value < LOW_BATTERY_THRESHOLD:
-            show_low_battery_popup()
-    elif msg.topic == "Anki/Vehicles/U/" + vehicleID + "/E/track":
-        track_id = payload.get("trackID", None)
-        if track_id is not None:
-            print(f"Received track information. Track ID: {track_id}")
-            current_track_id = track_id
-
-
-# SUBSCRIBE (client as argument)
-# print the message received by the subscribe function of the client class
+#SUBSCRIBE (client as argument)
+#print the message received by the subscribe function of the client class
 def subscribe(client: mqtt):
     client.subscribe("Anki/Vehicles/U/" + vehicleID + "/S/status")
     # handles messages
     client.on_message = on_message
-    client.subscribe("Anki/Vehicles/U/" + vehicleID + "/S/battery")  # battery topic
-    client.subscribe("Anki/Vehicles/U/" + vehicleID + "/E/track")  # track topic
 
-
-# ON_SUBSCRIBE to check subscription status (callback)
+#ON_SUBSCRIBE to check subscription status (callback)
 def on_subscribe(client, userdata, mid, granted_qos):
     # apparently, according to the paho mqtt docs, raises an error only if granted qos not equal to 0,1 or 2
     if granted_qos == 0 or granted_qos == 1 or granted_qos == 2:
@@ -171,28 +146,22 @@ def on_subscribe(client, userdata, mid, granted_qos):
         subscribed = True
     print("Subscribed with QoS:", granted_qos)
 
-
-# UNSUBSCRIBE function
-def unsubscribe(client: mqtt):
+#UNSUBSCRIBE function
+def unsubscribe (client: mqtt):
     global subscribed
     subscribed = False
     client.unsubscribe("Anki/Vehicles/U/" + vehicleID + "/S/status")
     print("client unsubscribed from broker")
 
-
-# PUBLISH
+#PUBLISH
 def publish(client: mqtt.Client, topic: str, payload: dict):
-    try:
-        message = json.dumps(payload)
-        client.publish(topic, message)
-        print(f"Published to topic {topic} with {payload}")
-    except Exception as e:
-        print(f"Error publishing to topic {topic}: {e}")
-
+    message = json.dumps(payload)
+    client.publish(topic, message)
+    print(f"Published to topic {topic} with {payload}")
 
 # ---------------------- Vehicle connection and discoverability -------------------------------
 
-# make the host discoverable
+#make the host discoverable
 def make_discoverable():
     discoverable_payload = {
         "type": "connect",
@@ -205,10 +174,9 @@ def make_discoverable():
     except Exception as e:
         print("Failed to make the host discoverable")
 
-
 # connect to the desired vehicle
-def connect_vehicle():
-    topic = "Anki/Vehicles/U/" + vehicleID + "/I/"
+def connect_vehicle(vhID):
+    topic = "Anki/Vehicles/U/" + vhID + "/I/"
     connect_payload = {
         "type": "connect",
         "payload": {
@@ -217,10 +185,9 @@ def connect_vehicle():
     }
     publish(client, topic, connect_payload)
 
-
 # disconnect from the vehicle
-def disconnect_vehicle():
-    topic = "Anki/Vehicles/U/" + vehicleID + "/I/"
+def disconnect_vehicle(vhID):
+    topic = "Anki/Vehicles/U/" + vhID + "/I/"
     connect_payload = {
         "type": "connect",
         "payload": {
@@ -229,12 +196,11 @@ def disconnect_vehicle():
     }
     publish(client, topic, connect_payload)
 
-
 # ---------------------- Vehicle commands -------------------------------
 #        lights -----------
 
-# back and front lights blinking every 2 seconds
-def blink_lights(vehicleID):
+#back and front lights blinking every 2 seconds
+def blink_lights(vehicleID, trueORFalse: bool):
     payload_on = {
         "type": "lights",
         "payload": {
@@ -250,26 +216,25 @@ def blink_lights(vehicleID):
             "front": "off"
         }
     }
+    if trueORFalse == True:
+        try:
+            print(f"Start the blink on vehicle: {vehicleID}")
 
-    try:
-        print(f"Start the blink on vehicle: {vehicleID}")
+            while True:
+                publish(client, "Anki/Vehicles/U/" + vehicleID + "/I/"+topicName,
+                        payload_on)  # publish the json payload to turn on the lights
+                print(f"Published: {payload_on} to {vehicleID}")
+                time.sleep(1)
 
-        while True:
-            publish(client, "Anki/Vehicles/U/" + vehicleID + "/I/" + topicName,
-                    payload_on)  # publish the json payload to turn on the lights
-            print(f"Published: {payload_on} to {vehicleID}")
-            time.sleep(1)
+                publish(client, "Anki/Vehicles/U/" + vehicleID + "/I/"+topicName,
+                        payload_off)  # publish the json payload to turn off the lights
+                print(f"Published: {payload_off} to {vehicleID}")
+                time.sleep(1)
 
-            publish(client, "Anki/Vehicles/U/" + vehicleID + "/I/" + topicName,
-                    payload_off)  # publish the json payload to turn off the lights
-            print(f"Published: {payload_off} to {vehicleID}")
-            time.sleep(1)
-
-    except KeyboardInterrupt:
-        print("Blinking interrupted. Stopping the lights.")
-    finally:
-        client.disconnect()
-
+        except KeyboardInterrupt:
+            print("Blinking interrupted. Stopping the lights.")
+        finally:
+            client.disconnect()
 
 # turn the front lights on
 def frontLightsOn(vehicleID):
@@ -280,17 +245,18 @@ def frontLightsOn(vehicleID):
         }
     }
 
+    blink_lights(vehicleID, False)
+
     try:
         print(f"Turning on the front lights on vehicle: {vehicleID}")
 
-        publish(client, "Anki/Vehicles/U/" + vehicleID + "/I/" + topicName,
+        publish(client, "Anki/Vehicles/U/" + vehicleID + "/I/"+topicName,
                 payload)  # publish the json payload to turn on the lights
         print(f"Published: {payload} to {vehicleID}")
 
 
     except Exception as e:
         print("Error turning the front lights on")
-
 
 # turn the front lights off
 def frontLightsOff(vehicleID):
@@ -301,10 +267,12 @@ def frontLightsOff(vehicleID):
         }
     }
 
+    blink_lights(vehicleID, False)
+
     try:
         print(f"Turning on the front lights on vehicle: {vehicleID}")
 
-        publish(client, "Anki/Vehicles/U/" + vehicleID + "/I/" + topicName,
+        publish(client, "Anki/Vehicles/U/" + vehicleID + "/I/"+topicName,
                 payload)  # publish the json payload to turn on the lights
         print(f"Published: {payload} to {vehicleID}")
 
@@ -321,6 +289,8 @@ def backLightsOn(vehicleID):
             "back": "on"
         }
     }
+
+    blink_lights(vehicleID, False)
 
     try:
         print(f"Turning on the front lights on vehicle: {vehicleID}")
@@ -343,6 +313,8 @@ def backLightsOff(vehicleID):
         }
     }
 
+    blink_lights(vehicleID, False)
+
     try:
         print(f"Turning on the front lights on vehicle: {vehicleID}")
 
@@ -354,6 +326,28 @@ def backLightsOff(vehicleID):
     except Exception as e:
         print("Error turning the back lights off")
 
+# turn the all the lights on
+def allLightsOn(vehicleID):
+    payload = {
+        "type": "lights",
+        "payload": {
+            "back": "on",
+            "front":"on"
+        }
+    }
+
+    blink_lights(vehicleID, False)
+
+    try:
+        print(f"Turning on all the lights on vehicle: {vehicleID}")
+
+        publish(client, "Anki/Vehicles/U/" + vehicleID + "/I/" + topicName,
+                payload)  # publish the json payload to turn on the lights
+        print(f"Published: {payload} to {vehicleID}")
+
+
+    except Exception as e:
+        print("Error turning all the lights off")
 
 # turn the all the lights off
 def allLightsOff(vehicleID):
@@ -361,9 +355,11 @@ def allLightsOff(vehicleID):
         "type": "lights",
         "payload": {
             "back": "off",
-            "front": "off"
+            "front":"off"
         }
     }
+
+    blink_lights(vehicleID, False)
 
     try:
         print(f"Turning off all the lights on vehicle: {vehicleID}")
@@ -380,6 +376,39 @@ def allLightsOff(vehicleID):
 #        drive commands -----------
 
 # change lane on which the car is driving
+def change_lane(ankiID):
+    try:
+        print("Driving interrupted. Stopping vehicle: " + ankiID)
+
+        while True:
+            if not emergency_flag and not sliders_updated:
+                offset = 0
+                velocity = 300
+                acceleration = 300
+            else:
+                # If emergency_flag is True, set offset, velocity and acceleration to stop lane change
+                offset = 0
+                velocity = 0
+                acceleration = 0
+
+            payload_lane = {
+                "type": "lane",
+                "payload": {
+                    "offset": offset,
+                    "velocity": velocity,
+                    "acceleration": acceleration
+                }
+            }
+
+            publish(client, "Anki/Vehicles/U/" + vehicleID + "/I/"+topicName, payload_lane)
+            print(f"Published lane change: {payload_lane}")
+
+            time.sleep(5)  # change lane every 5 seconds
+
+    except KeyboardInterrupt:
+        print("Lane change interrupted. Stopping vehicle: " + vehicleID)
+    finally:
+        client.disconnect()
 
 def change_lane_right():
     print("Changing to the right lane")
@@ -389,6 +418,7 @@ def change_lane_right():
         velocity = 250
         acceleration = 250
     else:
+        # If emergency_flag is True, set offset, velocity and acceleration to stop lane change
         offset = 0
         velocity = 0
         acceleration = 0
@@ -402,7 +432,7 @@ def change_lane_right():
         }
     }
 
-    publish(client, "Anki/Vehicles/U/" + vehicleID + "/I/" + topicName, payload_lane)
+    publish(client, "Anki/Vehicles/U/" + vehicleID + "/I/"+topicName, payload_lane)
 
 
 def change_lane_left():
@@ -413,6 +443,7 @@ def change_lane_left():
         velocity = 250
         acceleration = 250
     else:
+        # If emergency_flag is True, set offset, velocity and acceleration to stop lane change
         offset = 0
         velocity = 0
         acceleration = 0
@@ -426,29 +457,25 @@ def change_lane_left():
         }
     }
 
-    publish(client, "Anki/Vehicles/U/" + vehicleID + "/I/" + topicName, payload_lane)
+    publish(client, "Anki/Vehicles/U/" + vehicleID + "/I/"+topicName, payload_lane)
 
 
 # event objects to control the pause/resume of threads
 pause_drive_event = threading.Event()
 pause_lane_event = threading.Event()
-
-
-def stop_vehicle():
+def stop_vehicle(vehicleID):
     # sets the pause event to pause the drive_car and change_lane threads
     print("Stopping vehicle: " + vehicleID)
-    # stops the vehicle
+    #stops the vehicle
     velocity = 0
     acceleration = 0
     payload_speed = {
         "type": "speed", "payload": {"velocity": velocity, "acceleration": acceleration}}
 
-    publish(client, "Anki/Vehicles/U/" + vehicleID + "/I/" + topicName, payload_speed)
+    publish(client, "Anki/Vehicles/U/" + vehicleID + "/I/"+topicName, payload_speed)
     '''????  Changer et comprendre ça:'''
     pause_drive_event.set()
     pause_lane_event.set()
-
-
 '''' marche: '''
 
 
@@ -495,7 +522,6 @@ def change_flag_status():
     emergency_flag = not emergency_flag
     print(f"Emergency flag status changed to: {emergency_flag}")
 
-
 def emergency_stop_process():
     client_emergency = mqtt.Client('emergency_stop_process')
     client_emergency.on_connect = on_connect
@@ -512,7 +538,7 @@ def emergency_stop_process():
             time.sleep(1)  # check the emergency flag every second
             if emergency_flag:
                 blink_lights(vehicleID)
-                stop_vehicle()
+                stop_vehicle(vehicleID)
             else:
                 current_time = time.time()
                 if current_time - last_print_time >= 5:
@@ -525,30 +551,30 @@ def emergency_stop_process():
         client_emergency.disconnect()
 
 
-def sliders_released():
-    global sliders_updated
-    sliders_updated = False
-
-
-def show_low_battery_popup():
-    low_battery_popup = tk.Toplevel()
-    low_battery_popup.title("Low Battery Warning")
-
-    label = tk.Label(low_battery_popup, text="Warning: Low Battery!")
-    label.pack(padx=10, pady=10)
-
-    ok_button = tk.Button(low_battery_popup, text="OK", command=low_battery_popup.destroy)
-    ok_button.pack(pady=10)
-
-
 #           GUI -------------
 
 def run_tkinter():
     def create_tkinter_window():
-        global velocity_slider, acceleration_slider, battery_label, track_label
+        global velocity_slider, acceleration_slider
         # Create the main application window
         app = tk.Toplevel()
+        app.geometry('1280x720')
         app.title("Emergency Flag Controller")
+
+        #text input box to enter the name of the vehicle
+        vhNameBox = tk.Entry(app, width=30)
+        def on_connect_submit():
+            vehicleID = vhNameBox.get()
+            connect_vehicle(vehicleID)
+        def on_disconnect_submit():
+            vehicleID = vhNameBox.get()
+            disconnect_vehicle(vehicleID)
+        #button to submit the input
+        connectButton = tk.Button(app, text="Connect to vehicle", command=on_connect_submit)
+        disconnectButton = tk.Button(app, text="Disconnect from vehicle", command=on_disconnect_submit)
+        vhNameBox.pack(pady=10)
+        connectButton.pack(pady=10)
+        disconnectButton.pack(pady=10)
 
         # Create a button to toggle the emergency flag
         button = tk.Button(app, text="Toggle Emergency Flag", command=change_flag_status)
@@ -557,7 +583,7 @@ def run_tkinter():
         # Slider for changing the velocity
         velocity_label = tk.Label(app, text="Velocity")
         velocity_label.pack()
-        velocity_slider = tk.Scale(app, from_=0, to=100,
+        velocity_slider = tk.Scale(app, from_=-100, to=2000,
                                    orient=tk.HORIZONTAL,
                                    command=update_velocity_slider)
         velocity_slider.pack()
@@ -565,11 +591,15 @@ def run_tkinter():
         # Slider for changing the acceleration
         acceleration_label = tk.Label(app, text="Acceleration:")
         acceleration_label.pack()
-        acceleration_slider = tk.Scale(app, from_=0, to=100,
+        acceleration_slider = tk.Scale(app, from_=0, to=2000,
                                        orient=tk.HORIZONTAL,
                                        command=update_acceleration_slider)
 
         acceleration_slider.pack()
+
+        # stop button
+        stopbutton = tk.Button(text="Stop Vehicle", command=stop_vehicle(vehicleID))
+        stopbutton.pack(side=tk.LEFT, padx=5)
 
         # Buttons for changing lane
         change_lane_frame = tk.Frame(app)
@@ -585,25 +615,32 @@ def run_tkinter():
         lights_frame = tk.Frame(app)
         lights_frame.pack(side=tk.TOP, pady=20)
 
-        # Button for turning lights off
-        button_off = tk.Button(lights_frame, text="Lights Off",
-                               command=lambda: publish(client, "Anki/Vehicles/U/" + vehicleID + "/I/" + topicName,
-                                                       payload_off))
+        # Button for turning front lights off
+        button_off = tk.Button(lights_frame, text="Front lights Off",
+                               command=lambda: frontLightsOff(vehicleID))#publish(client, "Anki/Vehicles/U/" + vehicleID + "/I/"+topicName, payload_off))
         button_off.pack(side=tk.LEFT, padx=5)
 
-        # Button for turning lights on
-        button_on = tk.Button(lights_frame, text="Lights On",
-                              command=lambda: publish(client, "Anki/Vehicles/U/" + vehicleID + "/I/" + topicName,
-                                                      payload_on))
+        # Button for turning front lights on
+        button_on = tk.Button(lights_frame, text="Front lights On",
+                              command=lambda: frontLightsOn(vehicleID))#publish(client, "Anki/Vehicles/U/" + vehicleID + "/I/"+topicName, payload_on))
         button_on.pack(side=tk.RIGHT, padx=5)
 
-        # Label for displaying battery level
-        battery_label = tk.Label(app, text=f"Battery Level: {battery_level}%")
-        battery_label.pack(pady=10)
+        # Button for turning back lights off
+        button_off = tk.Button(lights_frame, text="Back lights Off",
+                               command=lambda: backLightsOff(
+                                   vehicleID))  # publish(client, "Anki/Vehicles/U/" + vehicleID + "/I/"+topicName, payload_off))
+        button_off.pack(side=tk.LEFT, padx=5)
 
-        # Label for current track
-        track_label = tk.Label(app, text=f"Current Track: {current_track_id}")
-        track_label.pack(pady=10)
+        # Button for turning back lights on
+        button_on = tk.Button(lights_frame, text="Back lights On",
+                              command=lambda: backLightsOn(
+                                  vehicleID))  # publish(client, "Anki/Vehicles/U/" + vehicleID + "/I/"+topicName, payload_on))
+        button_on.pack(side=tk.RIGHT, padx=5)
+
+        # Button for making the lights blink
+        button_on = tk.Button(lights_frame, text="Blink lights",
+                              command=lambda: blink_lights(vehicleID, trueORFalse=True))  # publish(client, "Anki/Vehicles/U/" + vehicleID + "/I/"+topicName, payload_on))
+        button_on.pack(pady=5)
 
         app.mainloop()  # Run the Tkinter event loop
 
@@ -620,21 +657,21 @@ def run_tkinter():
     # Keep a reference to the app so that it doesn't get garbage collected
     return tkinter_thread
 
+#------------------------------ Function invokation -----------------------------------
 
-# ------------------------------ Function invocation -----------------------------------
-
+'''
 # connect to the broker
 connect_broker()
 # make the host discoverable if it is not already
 make_discoverable()
 
 # ----- start the loop to open the GUI
-# client.loop_start()
+#client.loop_start()
 
 # subscribe to the broker
 subscribe(client)
 # connect to the right vehicle
-connect_vehicle()
+connect_vehicle(vehicleID)
 # operate commands on that vehicle
 
 # creation of the different threads
@@ -643,8 +680,9 @@ emergency_thread.start()
 
 blink_thread = threading.Thread(target=blink_lights, args=(vehicleID))
 blink_thread.start()
+'''
 
 # run the GUI
 run_tkinter()
 
-# client.loop_stop()
+#client.loop_stop()
