@@ -50,16 +50,20 @@ public class VehicleInfoController implements Observer, Runnable {
     @Override
     public void update(Observable o, Object arg) {
         if (o instanceof VehicleInfoModel) {
-            String changedValue = (String) arg;
-            switch (changedValue){
-                case "track id":
+            switch ((int) arg){
+                case VehicleInfoModel.SPEED_UPDATE:
+                    view.updateMeasuredSpeedLabel(this.vehicleInfoModel.getMeasuredSpeed());
+                    break;
+                case VehicleInfoModel.TRACK_ID_UPDATE:
                     view.updateTrackIdLabel(this.vehicleInfoModel.getCurrentTrackId());
-                case "turning status":
+                    break;
+                case VehicleInfoModel.TURNING_STATUS_UPDATE:
                     view.updateTurningStatusLabel(this.vehicleInfoModel.getTurningStatus());
-                case "measured speed":
-                    view.updateEffectiveSpeedLabel(this.vehicleInfoModel.getMeasuredSpeed());
-                case "battery level":
-                    view.updateBatteryLevelLabel(this.vehicleInfoModel.getBatteryLevel());            }
+                    break;
+                case VehicleInfoModel.BATTERY_LEVEL_UPDATE:
+                    view.updateBatteryLevelLabel(this.vehicleInfoModel.getBatteryLevel());
+                    break;
+            }
         }
     }
 
@@ -78,7 +82,7 @@ public class VehicleInfoController implements Observer, Runnable {
         try {
             receivedMsg = this.speedEventListener.getMessageQueue().take();
             JSONObject jsonObj = (JSONObject) this.parser.parse(new String(receivedMsg.getPayload()));
-            this.vehicleInfoModel.setMeasuredSpeed((int) jsonObj.get("value"));
+            this.vehicleInfoModel.setMeasuredSpeed(((Long) jsonObj.get("value")).intValue());
         } catch (ParseException | InterruptedException e) {
             System.out.println(e.getMessage());
             e.getStackTrace();
@@ -90,7 +94,7 @@ public class VehicleInfoController implements Observer, Runnable {
         try {
             receivedMsg = this.trackEventListener.getMessageQueue().take();
             JSONObject jsonObj = (JSONObject) this.parser.parse(new String(receivedMsg.getPayload()));
-            this.vehicleInfoModel.setCurrentTrackId((int) jsonObj.get("trackID"));
+            this.vehicleInfoModel.setCurrentTrackId(((Long) jsonObj.get("trackID")).intValue());
         } catch (ParseException | InterruptedException e) {
             System.out.println(e.getMessage());
             e.getStackTrace();
@@ -102,8 +106,8 @@ public class VehicleInfoController implements Observer, Runnable {
         try {
             receivedMsg = this.wheelDistanceEventListener.getMessageQueue().take();
             JSONObject jsonObj = (JSONObject) this.parser.parse(new String(receivedMsg.getPayload()));
-            int leftWheelDistance = (int) jsonObj.get("left");
-            int rightWheelDistance = (int) jsonObj.get("right");
+            int leftWheelDistance = ((Long) jsonObj.get("left")).intValue();
+            int rightWheelDistance = ((Long) jsonObj.get("right")).intValue();
             this.vehicleInfoModel.estimateIfTurning(leftWheelDistance, rightWheelDistance);
         } catch (ParseException | InterruptedException e) {
             System.out.println(e.getMessage());
@@ -116,7 +120,7 @@ public class VehicleInfoController implements Observer, Runnable {
         try {
             receivedMsg = this.batteryStatusListener.getMessageQueue().take();
             JSONObject jsonObj = (JSONObject) this.parser.parse(new String(receivedMsg.getPayload()));
-            int batteryLevel = (int) jsonObj.get("value");
+            int batteryLevel = ((Long) jsonObj.get("value")).intValue();
             this.vehicleInfoModel.setBatteryLevel(batteryLevel);
             view.updateBatteryLevelLabel(batteryLevel);
         } catch (ParseException | InterruptedException e) {

@@ -5,19 +5,22 @@ import java.util.Observable;
 // In MVC, the Model uses "Observer" design pattern by being an observable, containing the application states and logic for state change.
 // Controller and View registers as observers of the Model to be notified as soon as the Model state changes.
 public class SteeringModel extends Observable {
+    public static final int WISHED_SPEED_UPDATE = 1;
+    public static final int WISHED_LANE_OFFSET = 2;
+    public static final int EMERGENCY_UPDATE = 3;
+    public static final int FRONT_LIGHTS_UPDATE = 4;
+    public static final int BACK_LIGHTS_UPDATE = 5;
     private boolean emergency = false;
     private String wishedFrontLightStatus;
     private String wishedBackLightStatus;
     private int wishedSpeed;
-    private int minSpeed;
-    private int maxSpeed;
     private int wishedLaneOffset;
 
     public SteeringModel(){
         this.emergency=false;
         this.wishedFrontLightStatus = "off";
         this.wishedBackLightStatus = "off";
-        this.wishedSpeed = 10;
+        this.wishedSpeed = 0;
         this.wishedLaneOffset = 0;
     }
 
@@ -28,7 +31,7 @@ public class SteeringModel extends Observable {
     public void setWishedSpeed(int wishedSpeed) {
         this.wishedSpeed = wishedSpeed;
         setChanged();
-        notifyObservers("wished speed");
+        notifyObservers(SteeringModel.WISHED_SPEED_UPDATE);
     }
 
     public int getWishedLaneOffset() {
@@ -38,7 +41,7 @@ public class SteeringModel extends Observable {
     public void setWishedLaneOffset(int wishedLaneOffset) {
         this.wishedLaneOffset = wishedLaneOffset;
         setChanged();
-        notifyObservers("wished lane offset");
+        notifyObservers(SteeringModel.WISHED_LANE_OFFSET);
     }
 
     public boolean getEmergency() {
@@ -48,7 +51,7 @@ public class SteeringModel extends Observable {
     public void setEmergency(boolean emergency) {
         this.emergency = emergency;
         setChanged();
-        notifyObservers("emergency");
+        notifyObservers(SteeringModel.EMERGENCY_UPDATE);
     }
 
     public String getWishedFrontLightStatus() {
@@ -58,7 +61,7 @@ public class SteeringModel extends Observable {
     public void setWishedFrontLightStatus(String wishedFrontLightStatus) {
         this.wishedFrontLightStatus = wishedFrontLightStatus;
         setChanged();
-        notifyObservers("front lights status");
+        notifyObservers(SteeringModel.FRONT_LIGHTS_UPDATE);
     }
 
     public String getWishedBackLightStatus() {
@@ -68,7 +71,7 @@ public class SteeringModel extends Observable {
     public void setWishedBackLightStatus(String wishedBackLightStatus) {
         this.wishedBackLightStatus = wishedBackLightStatus;
         setChanged();
-        notifyObservers("back lights status");
+        notifyObservers(SteeringModel.BACK_LIGHTS_UPDATE);
     }
 
 
