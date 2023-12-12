@@ -7,10 +7,8 @@ import tkinter as tk
 # TODO:
 #        - disconnect / cleanup
 #        - add threads
-#        - track the tracks controller (final project part 0.2.3)
+#        - track the tracks controller (final project part 0.2.3) --- MAKE SURE IT WORKS
 #        - improve gui
-#        - put everything in a class
-#        - add battery level to GUI
 #        - change lane right and left values need to be modified to work
 #        - fix the slider for acceleration and velocity (values in between still seem to be published)
 
@@ -26,6 +24,11 @@ emergency_flag = False  # setting initial flag value to False
 velocity_slider = None
 acceleration_slider = None
 sliders_updated = False
+
+battery_label = None
+battery_level = 0
+current_track_id = None
+LOW_BATTERY_THRESHOLD = 20
 
 # Payloads for the lights
 payload_on = {
@@ -63,22 +66,50 @@ def on_message(client, userdata, msg):
     print(f"Received {msg.payload} from {msg.topic}")
     payload = json.loads(msg.payload.decode("utf-8"))
 
-    global emergency_flag
+    global emergency_flag, battery_level, current_track_id
+
     if msg.topic == emergency_topic:
         emergency_flag = payload.get("value", False)
         print(f"Emergency flag is set to {emergency_flag}")
+    elif msg.topic == "Anki/Vehicles/U/" + vehicleID + "/S/battery":
+        battery_value = payload.get("value", 0)
+        print(f"Battery value is {battery_value}")
+        battery_level = battery_value
+
+        if battery_value < LOW_BATTERY_THRESHOLD:
+            show_low_battery_popup()
+    elif msg.topic == "Anki/Vehicles/U/" + vehicleID + "/E/track":
+        track_id = payload.get("trackID", None)
+        if track_id is not None:
+            print(f"Received track information. Track ID: {track_id}")
+            current_track_id = track_id
 
 
 def subscribe(client: mqtt.Client):
     client.subscribe("Anki/Vehicles/U/" + vehicleID + "/S/status")  # subscribe to the status of the vehicle
     client.subscribe("Anki/Vehicles/U/" + vehicleID + "/S/battery")  # subscribe to the battery topic
     client.on_message = on_message
+    client.subscribe("Anki/Vehicles/U/" + vehicleID + "/E/track")
 
 
 def publish(client: mqtt.Client, topic: str, payload: dict):
-    message = json.dumps(payload)
-    client.publish(topic, message)
-    print(f"Published to topic {topic} with {payload}")
+    try:
+        message = json.dumps(payload)
+        client.publish(topic, message)
+        print(f"Published to topic {topic} with {payload}")
+    except Exception as e:
+        print(f"Error publishing to topic {topic}: {e}")
+
+
+def show_low_battery_popup():
+    low_battery_popup = tk.Toplevel()
+    low_battery_popup.title("Low Battery Warning")
+
+    label = tk.Label(low_battery_popup, text="Warning: Low Battery!")
+    label.pack(padx=10, pady=10)
+
+    ok_button = tk.Button(low_battery_popup, text="OK", command=low_battery_popup.destroy)
+    ok_button.pack(pady=10)
 
 
 def blink_lights(vehicleID):
@@ -110,7 +141,6 @@ def change_lane_right():
         velocity = 250
         acceleration = 250
     else:
-        # If emergency_flag is True, set offset, velocity and acceleration to stop lane change
         offset = 0
         velocity = 0
         acceleration = 0
@@ -223,8 +253,6 @@ def update_velocity_slider(value):
 def update_acceleration_slider(value):
     global sliders_updated
     if acceleration_slider:
-        # acceleration_slider.set(int(value))
-
         sliders_updated = True
 
         payload_acceleration = {
@@ -244,7 +272,7 @@ def sliders_released():
 
 def run_tkinter():
     def create_tkinter_window():
-        global velocity_slider, acceleration_slider
+        global velocity_slider, acceleration_slider, battery_label, track_label
         # Create the main application window
         app = tk.Toplevel()
         app.title("Emergency Flag Controller")
@@ -295,6 +323,14 @@ def run_tkinter():
         button_on = tk.Button(lights_frame, text="Lights On",
                               command=lambda: publish(client, "Anki/Vehicles/U/" + vehicleID + "/I/jb", payload_on))
         button_on.pack(side=tk.RIGHT, padx=5)
+
+        # Label for displaying battery level
+        battery_label = tk.Label(app, text=f"Battery Level: {battery_level}%")
+        battery_label.pack(pady=10)
+
+        # Label for current track
+        track_label = tk.Label(app, text=f"Current Track: {current_track_id}")
+        track_label.pack(pady=10)
 
         app.mainloop()  # Run the Tkinter event loop
 
