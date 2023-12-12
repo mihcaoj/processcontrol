@@ -3,11 +3,15 @@ package mqtt_project;
 import java.util.Observable;
 
 public class VehicleInfoModel extends Observable {
-    protected int measuredSpeed;
-    private int currentTrackId;
-    private Boolean turningStatus;
-    private int batteryLevel;
-    private boolean lowBatteryStatus;
+    public static final int SPEED_UPDATE = 1;
+    public static final int TRACK_ID_UPDATE = 2;
+    public static final int TURNING_STATUS_UPDATE = 3;
+    public static final int BATTERY_LEVEL_UPDATE = 4;
+    protected int measuredSpeed=0;
+    private int currentTrackId=0;
+    private Boolean turningStatus=false;
+    private int batteryLevel=100;
+    private boolean lowBatteryStatus=false;
 
     public VehicleInfoModel(){
     }
@@ -15,7 +19,7 @@ public class VehicleInfoModel extends Observable {
     public void setMeasuredSpeed(int measuredSpeed){
         this.measuredSpeed = measuredSpeed;
         setChanged();
-        notifyObservers("measured speed");
+        notifyObservers(VehicleInfoModel.SPEED_UPDATE);
     }
 
     public int getMeasuredSpeed(){
@@ -25,7 +29,7 @@ public class VehicleInfoModel extends Observable {
     public void setCurrentTrackId(int currentTrackId){
         this.currentTrackId = currentTrackId;
         setChanged();
-        notifyObservers("track id");
+        notifyObservers(VehicleInfoModel.TRACK_ID_UPDATE);
     }
 
     public int getCurrentTrackId(){
@@ -35,7 +39,7 @@ public class VehicleInfoModel extends Observable {
     public void estimateIfTurning(int leftWheelDistance, int rightWheelDistance){
         this.turningStatus = leftWheelDistance < rightWheelDistance - 10 | rightWheelDistance < leftWheelDistance - 10;
         setChanged();
-        notifyObservers("turning status");
+        notifyObservers(VehicleInfoModel.TURNING_STATUS_UPDATE);
     }
 
     public boolean getTurningStatus(){
@@ -46,7 +50,7 @@ public class VehicleInfoModel extends Observable {
         this.batteryLevel = batteryLevel;
         this.lowBatteryStatus = this.batteryLevel < 70;
         setChanged();
-        notifyObservers("battery level");
+        notifyObservers(VehicleInfoModel.BATTERY_LEVEL_UPDATE);
     }
 
     public int getBatteryLevel(){

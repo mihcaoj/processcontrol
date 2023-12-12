@@ -143,14 +143,14 @@ def on_message(client, userdata, msg):
         emergency_flag = True
         print(f"Emergency flag is set to {emergency_flag}")
     elif msg.topic == "Anki/Vehicles/U/" + vehicleID + "/S/battery":
-        battery_value = payload.get("value", 0)
+        battery_value = msg.payload.decode().get("value", 0)
         print(f"Battery value is {battery_value}")
         battery_level = battery_value
 
         if battery_value < LOW_BATTERY_THRESHOLD:
             show_low_battery_popup()
     elif msg.topic == "Anki/Vehicles/U/" + vehicleID + "/E/track":
-        track_id = payload.get("trackID", None)
+        track_id = msg.payload.decode().get("trackID", None)
         if track_id is not None:
             print(f"Received track information. Track ID: {track_id}")
             current_track_id = track_id
@@ -416,6 +416,8 @@ def change_lane_left():
         velocity = 250
         acceleration = 250
     else:
+        # If emergency_flag is True, set offset, velocity and acceleration to stop lane change
+
         offset = 0
         velocity = 0
         acceleration = 0
