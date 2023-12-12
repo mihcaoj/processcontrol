@@ -15,7 +15,7 @@ import tkinter as tk
 ip_address = '192.168.4.1'  # ip address of the hyperdrive
 port = 1883  # port for MQTT
 client = mqtt.Client('hyperdrive')
-vehicleID = 'e10a07218a87'  # change according to the vehicle ID
+vehicleID = 'ec4a0ca4bd82'  # change according to the vehicle ID
 
 emergency_topic = "Anki/Emergency/U"  # path for emergency topic
 emergency_flag = False  # setting initial flag value to False
@@ -88,8 +88,8 @@ def on_message(client, userdata, msg):
 def subscribe(client: mqtt.Client):
     client.subscribe("Anki/Vehicles/U/" + vehicleID + "/S/status")  # subscribe to the status of the vehicle
     client.subscribe("Anki/Vehicles/U/" + vehicleID + "/S/battery")  # subscribe to the battery topic
+    client.subscribe("Anki/Vehicles/U/" + vehicleID + "/E/track")  # subscribe to the track topic
     client.on_message = on_message
-    client.subscribe("Anki/Vehicles/U/" + vehicleID + "/E/track")
 
 
 def publish(client: mqtt.Client, topic: str, payload: dict):
@@ -204,6 +204,7 @@ def change_flag_status():
 
 
 def emergency_stop_process():
+
     client_emergency = mqtt.Client('emergency_stop_process')
     client_emergency.on_connect = on_connect
     client_emergency.on_message = on_message
@@ -235,7 +236,6 @@ def emergency_stop_process():
 def update_velocity_slider(value):
     global sliders_updated
     if velocity_slider:
-        # velocity_slider.set(int(value))
 
         sliders_updated = True
 
