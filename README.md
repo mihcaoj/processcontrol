@@ -25,7 +25,7 @@ TODO: ADD REST OF THE FEATURES
     ```
     python3 pymqtt.py
     ```
-
+    
   **GUI Interface:**
    - Toggle the emergency flag using the "Toggle Emergency Flag" button.
    - Adjust velocity and acceleration using the sliders.
@@ -46,10 +46,10 @@ TODO: ADD REST OF THE FEATURES
         Manages the cleanup process when the script exits (cleanup() function is registered with atexit).
   
 
-***Clean Up:***
+**Clean Up:**
    - The script will automatically disconnect from the MQTT broker and stop the threads when it exits.
 
-***Known Issues:***
+**Known Issues:**
 
 
 ## For the Java program:
