@@ -10,7 +10,7 @@ class AnkiController:
         self.port = port
         self.vehicle_id = vehicle_id
         self.client = mqtt.Client('hyperdrive')
-        self.emergency_flag = False
+        self._emergency_flag = False
         self.current_track = None
 
         # Create a lock for synchronizing access to emergency_flag

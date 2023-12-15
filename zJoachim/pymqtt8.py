@@ -3,6 +3,7 @@ import time
 import json
 import threading
 import tkinter as tk
+import atexit
 
 # TODO:
 #        - disconnect / cleanup
@@ -29,7 +30,11 @@ battery_label = None
 battery_level = 0
 track_label = None
 current_track_id = 0
+direction_label = None
+current_direction = 0
 LOW_BATTERY_THRESHOLD = 20
+
+tkinter_thread = None
 
 # Payloads for the lights
 payload_on = {
@@ -67,7 +72,7 @@ def on_message(client, userdata, msg):
     print(f"Received {msg.payload} from {msg.topic}")
     payload = json.loads(msg.payload.decode("utf-8"))
 
-    global emergency_flag, battery_level, current_track_id
+    global emergency_flag, battery_level, current_track_id, current_direction
 
     if msg.topic == emergency_topic:
         emergency_flag = payload.get("value", False)
@@ -86,6 +91,10 @@ def on_message(client, userdata, msg):
             current_track_id = track_id
         else:
             print("Received track information, but track_id is None.")
+
+        direction = payload.get("direction", "unknown")
+        print(f"Received track information. Direction: {direction}")
+        current_direction = direction
 
 
 def subscribe(client: mqtt.Client):
@@ -274,25 +283,33 @@ def sliders_released():
 
 
 def update_battery_label():
+    # Update the battery label
     battery_label.config(text=f"Battery Level: {battery_level}%")
     # Schedule the next update after 1s
     battery_label.after(1000, update_battery_label)
 
 def update_track_label():
+    # Update the track label
     track_label.config(text=f"Current Track: {current_track_id}")
     # Schedule the next update after 1 second
     track_label.after(1000, update_track_label)
 
+def update_direction_label():
+    # Update the direction label
+    direction_label.config(text=f"Direction: {current_direction}")
+    # Schedule the next update after 1s
+    direction_label.after(1000, update_direction_label)
+
 def update_gui():
     update_battery_label()
     update_track_label()
-    # Schedule the next update after 1s
-    track_label.after(1000, update_gui)
+    update_direction_label()
+    
 
 
 def run_tkinter():
     def create_tkinter_window():
-        global velocity_slider, acceleration_slider, battery_label, track_label
+        global velocity_slider, acceleration_slider, battery_label, track_label, direction_label
         # Create the main application window
         app = tk.Toplevel()
         app.title("Emergency Flag Controller")
@@ -352,12 +369,17 @@ def run_tkinter():
         track_label = tk.Label(app, text=f"Current Track: {current_track_id}")
         track_label.pack(pady=10)
 
+        # Label for displaying the direction
+        direction_label = tk.Label(app, text=f"Direction: {current_direction}")
+        direction_label.pack(pady=10)
+
         # Initial GUI update
         update_gui()
 
         app.mainloop()  # Run the Tkinter event loop
 
     def start_tkinter():
+        global tkinter_thread
         app_ref = tk.Tk()
         app_ref.withdraw()
         app_ref.after(0, create_tkinter_window)
@@ -369,6 +391,17 @@ def run_tkinter():
 
     # Keep a reference to the app so that it doesn't get garbage collected
     return tkinter_thread
+
+# Add a clean-up function
+def cleanup():
+    client.disconnect()
+    pause_drive_event.set()
+    pause_lane_event.set()
+    emergency_thread.join()
+    tkinter_thread.join()
+
+# Call cleanup when the script exits
+atexit.register(cleanup)
 
 
 # publish the initial connect message
