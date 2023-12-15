@@ -26,14 +26,30 @@ TODO: ADD REST OF THE FEATURES
     python3 pymqtt.py
     ```
 
-  **_GUI Interface:_**
+  **GUI Interface:**
    - Toggle the emergency flag using the "Toggle Emergency Flag" button.
    - Adjust velocity and acceleration using the sliders.
 
-  ***_Clean Up:_***
+**Threads:**
+
+- **_Emergency Thread (emergency_thread):_**
+        Responsible for running the emergency_stop_process() function, which continuously checks the emergency_flag and takes appropriate actions if an emergency is detected.
+        Handles emergency situations, such as stopping the vehicle and blinking lights.
+
+- **_Tkinter Thread (tkinter_thread):_**
+        Responsible for running the Tkinter GUI using the run_tkinter() function.
+        Manages the GUI window and provides an interface for user interactions.
+
+- **_Main Thread:_**
+        The main thread starts the MQTT client loop (client.loop_start()).
+        Handles the connection to the MQTT broker, subscription to topics, and initial payload publication.
+        Manages the cleanup process when the script exits (cleanup() function is registered with atexit).
+  
+
+***Clean Up:***
    - The script will automatically disconnect from the MQTT broker and stop the threads when it exits.
 
-  ***_Known Issues:_***
+***Known Issues:***
 
 
 ## For the Java program:
