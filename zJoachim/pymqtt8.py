@@ -15,7 +15,7 @@ import tkinter as tk
 ip_address = '192.168.4.1'  # ip address of the hyperdrive
 port = 1883  # port for MQTT
 client = mqtt.Client('hyperdrive')
-vehicleID = 'ec4a0ca4bd82'  # change according to the vehicle ID
+vehicleID = 'cec233dec1cb'  # change according to the vehicle ID
 
 emergency_topic = "Anki/Emergency/U"  # path for emergency topic
 emergency_flag = False  # setting initial flag value to False
@@ -269,6 +269,12 @@ def sliders_released():
     global sliders_updated
     sliders_updated = False
 
+def update_labels():
+    battery_label.config(text=f"Battery Level: {battery_level}%")
+    track_label.config(text=f"Current Track: {current_track_id}")
+    # Schedule the next update after 1s
+    battery_label.after(1000, update_labels)
+
 
 def run_tkinter():
     def create_tkinter_window():
@@ -331,6 +337,8 @@ def run_tkinter():
         # Label for current track
         track_label = tk.Label(app, text=f"Current Track: {current_track_id}")
         track_label.pack(pady=10)
+
+        update_labels()
 
         app.mainloop()  # Run the Tkinter event loop
 
