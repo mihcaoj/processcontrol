@@ -27,7 +27,8 @@ sliders_updated = False
 
 battery_label = None
 battery_level = 0
-current_track_id = None
+track_label = None
+current_track_id = 0
 LOW_BATTERY_THRESHOLD = 20
 
 # Payloads for the lights
@@ -79,10 +80,12 @@ def on_message(client, userdata, msg):
         if battery_value < LOW_BATTERY_THRESHOLD:
             show_low_battery_popup()
     elif msg.topic == "Anki/Vehicles/U/" + vehicleID + "/E/track":
-        track_id = payload.get("trackID", None)
-        if track_id is not None:
+        track_id = payload.get("trackId", None)
+        if track_id is not None:  # Check if track_id is not None
             print(f"Received track information. Track ID: {track_id}")
             current_track_id = track_id
+        else:
+            print("Received track information, but track_id is None.")
 
 
 def subscribe(client: mqtt.Client):
@@ -269,11 +272,22 @@ def sliders_released():
     global sliders_updated
     sliders_updated = False
 
-def update_labels():
+
+def update_battery_label():
     battery_label.config(text=f"Battery Level: {battery_level}%")
-    track_label.config(text=f"Current Track: {current_track_id}")
     # Schedule the next update after 1s
-    battery_label.after(1000, update_labels)
+    battery_label.after(1000, update_battery_label)
+
+def update_track_label():
+    track_label.config(text=f"Current Track: {current_track_id}")
+    # Schedule the next update after 1 second
+    track_label.after(1000, update_track_label)
+
+def update_gui():
+    update_battery_label()
+    update_track_label()
+    # Schedule the next update after 1s
+    track_label.after(1000, update_gui)
 
 
 def run_tkinter():
@@ -338,7 +352,8 @@ def run_tkinter():
         track_label = tk.Label(app, text=f"Current Track: {current_track_id}")
         track_label.pack(pady=10)
 
-        update_labels()
+        # Initial GUI update
+        update_gui()
 
         app.mainloop()  # Run the Tkinter event loop
 
