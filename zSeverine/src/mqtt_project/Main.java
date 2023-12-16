@@ -16,7 +16,7 @@ public class Main {
         // Parameters
         String mqttBrokerUri = "tcp://192.168.4.1:1883";
         String clientId = "GroupD";
-        String vehicleId = "e10a07218a87"; // TODO: adapt each time among ["cec233dec1cb", "f2e85f2f5770", "e10a07218a87", "d11d2fea5c74", "cb443e1e4025", "d205effe02cb", "d716ea410e89", "ef7e50abbe16", "f4c22c6c0382"]
+        String vehicleId = "d98ebab7c206"; // TODO: adapt each time among ["d98ebab7c206", "cec233dec1cb", "f2e85f2f5770", "e10a07218a87", "d11d2fea5c74", "cb443e1e4025", "d205effe02cb", "d716ea410e89", "ef7e50abbe16", "f4c22c6c0382"]
 
         // Create MQTT Handler to have a client and connect it to the MQTT broker
         MqttHandler mqttHandler = null;

@@ -9,12 +9,14 @@ public class SteeringController implements Observer, Runnable{
     private final SteeringModel steeringModel;
     private final MqttHandler mqttHandler;
     private final String vehicleIntentTopic;
+    private final View view;
 
     public SteeringController(MqttHandler mqttHandler, SteeringModel steeringModel, View view) {
         this.mqttHandler = mqttHandler;
         this.vehicleIntentTopic = mqttHandler.topicPathByName.get("singleVehicleIntent");
         this.steeringModel = steeringModel;
         this.steeringModel.addObserver(this);
+        this.view = view;
     }
 
     @Override
@@ -31,7 +33,12 @@ public class SteeringController implements Observer, Runnable{
                     msg = MessageHandler.createIntentMsg("lane", new String[][]{{"offset", String.valueOf(laneOffset)}});
                     break;
                 case SteeringModel.EMERGENCY_UPDATE:
-                    msg = MessageHandler.createIntentMsg("speed", new String[][]{{"velocity", String.valueOf(0)}});
+                    this.view.setMinMaxSpeedLaneOffset();
+                    if (steeringModel.getEmergency()) {
+                        msg = MessageHandler.createIntentMsg("speed", new String[][]{{"velocity", String.valueOf(0)}});
+                    } else {
+                        msg = MessageHandler.createIntentMsg("speed", new String[][]{{"velocity", String.valueOf(this.steeringModel.getWishedSpeed())}});
+                    }
                     break;
                 case SteeringModel.FRONT_LIGHTS_UPDATE:
                     msg = MessageHandler.createIntentMsg("lights", new String[][]{{"front", this.steeringModel.getWishedFrontLightStatus()}});
@@ -52,6 +59,5 @@ public class SteeringController implements Observer, Runnable{
 
     @Override
     public void run() {
-
     }
 }
