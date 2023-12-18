@@ -28,7 +28,6 @@ public class View extends JFrame implements Observer {
     private JLabel connectionStatusLabel;
     private JLabel trackIdLabel;
     private JLabel turningStatusLabel;
-    private JLabel batteryLevelLabel;
     private JLabel lowBatteryLabel;
     private JProgressBar batteryProgressBar;
 
@@ -194,9 +193,9 @@ public class View extends JFrame implements Observer {
         // --- Battery Info ---
         JPanel batteryPanel = new JPanel();
         batteryPanel.setLayout(new GridLayout(3,1));
-        this.batteryLevelLabel = new JLabel();
-        this.batteryLevelLabel.setHorizontalAlignment(JLabel.CENTER);
-        this.batteryLevelLabel.setText("Battery level");
+        JLabel batteryLevelLabel = new JLabel();
+        batteryLevelLabel.setHorizontalAlignment(JLabel.CENTER);
+        batteryLevelLabel.setText("Battery level");
         this.lowBatteryLabel = new JLabel();
         this.lowBatteryLabel.setHorizontalAlignment(JLabel.CENTER);
         this.lowBatteryLabel.setText("!! LOW BATTERY -> Reduced speed !!");
