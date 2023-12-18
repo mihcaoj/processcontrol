@@ -1,10 +1,10 @@
 # **Overview**
 
-This project utilizes the MQTT protocol for communication with the Anki Hyperdrive vehicle and provides a graphical user interface (GUI) that allows users to interact with a remote-controlled vehicle.
+This project utilizes the MQTT protocol for communication with the Anki Hyperdrive vehicle and provides a graphical user interface (GUI) that allows users to interact with a remote-controlled vehicle. This project contains versions in both Python and Java. The overall features are the same in both languages, some features may differ slightly.
 
 # **Features**
 
--  Choose which vehicle you want to connect to
+-  Choose which vehicle you want to connect to from a list of discovered vehicles directly from the GUI.
 -  **_Emergency Flag Control:_** Toggle the emergency flag to enable or disable emergency stops.
 -  **_Velocity and Acceleration Control:_** Adjust the velocity and acceleration of the vehicle using sliders in the GUI. The acceleration control is available only in the Python implementation.
 -  **_Lane Change:_** Change lanes to the left or right, with options to modify offset, velocity, and acceleration.
@@ -12,15 +12,13 @@ This project utilizes the MQTT protocol for communication with the Anki Hyperdri
 -  **_Track Information:_** Retrieve the trackId on which the vehicle runs currently and estimate if it is a turning track or not.
 -  **_Battery Level Information:_** Retrieve the battery level and limit speed if the battery level is too low
 
-TODO: ADD REST OF THE FEATURES
-
 # Dependencies & Usage
 
 ## For the Python script:
     
   **Install Dependencies:**
     ```
-    pip install paho-mqtt ttkbootstrap
+    pip install paho-mqtt
     ```
 
   **Run the Script:**
@@ -49,9 +47,11 @@ TODO: ADD REST OF THE FEATURES
   
 
 **Clean Up:**
-   - The script will automatically disconnect from the MQTT broker and stop the threads when it exits.
+   - The script will automatically disconnect from the MQTT broker and stop the threads when it exits. (This feature hasn't been implemented correctly and still doesn't work).
 
 **Known Issues:**
+- Battery level can sometimes be unpredictable and jump from one value to another.
+- Once the emergency flag is set to False after having been True, need to move the velocity slider to get the vehicle to start moving again.
 
 
 ## For the Java program:
