@@ -28,7 +28,11 @@ This project utilizes the MQTT protocol for communication with the Anki Hyperdri
     
   **GUI Interface:**
    - Toggle the emergency flag using the "Toggle Emergency Flag" button.
+   - Choose the desired vehicle(s) from the list of discovered vehicles on the GUI.
    - Adjust velocity and acceleration using the sliders.
+   - Turn lights on and off at will.
+   - See the current battery level of the selected vehicle.
+   - See which track the vehicle is on and if said track is a turning track or not.
 
 **Threads:**
 
