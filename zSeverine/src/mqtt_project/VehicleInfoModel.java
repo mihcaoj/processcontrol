@@ -3,10 +3,12 @@ package mqtt_project;
 import java.util.Observable;
 
 public class VehicleInfoModel extends Observable {
-    public static final int SPEED_UPDATE = 1;
-    public static final int TRACK_ID_UPDATE = 2;
-    public static final int TURNING_STATUS_UPDATE = 3;
-    public static final int BATTERY_LEVEL_UPDATE = 4;
+    public static final int CONNECTION_UPDATE = 1;
+    public static final int SPEED_UPDATE = 2;
+    public static final int TRACK_ID_UPDATE = 3;
+    public static final int TURNING_STATUS_UPDATE = 4;
+    public static final int BATTERY_LEVEL_UPDATE = 5;
+    protected String connectionStatus="UNKNOWN";
     protected int measuredSpeed=0;
     private int currentTrackId=0;
     private Boolean turningStatus=false;
@@ -14,6 +16,16 @@ public class VehicleInfoModel extends Observable {
     private boolean lowBatteryStatus=false;
 
     public VehicleInfoModel(){
+    }
+
+    public void setConnectionStatus(String connectionStatus){
+        this.connectionStatus = connectionStatus;
+        setChanged();
+        notifyObservers(VehicleInfoModel.CONNECTION_UPDATE);
+    }
+
+    public String getConnectionStatus(){
+        return this.connectionStatus;
     }
 
     public void setMeasuredSpeed(int measuredSpeed){

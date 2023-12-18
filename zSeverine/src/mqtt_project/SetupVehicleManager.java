@@ -58,7 +58,15 @@ public class SetupVehicleManager implements Runnable{
         MqttMessage receivedMsg;
         boolean discovering = false;
         try {while (!discovering) {
-            receivedMsg = discoveringStatusListener.getLastMessage();
+            do {
+                receivedMsg = discoveringStatusListener.getLastMessage();
+                try {
+                    Thread.sleep(1000);
+                } catch (InterruptedException e){
+                    e.getStackTrace();
+                }
+            }
+            while (receivedMsg==null);
             JSONObject jsonObj = (JSONObject) parser.parse(new String(receivedMsg.getPayload()));
             if ((Boolean) jsonObj.get("value")) {
                 discovering = true;
@@ -80,10 +88,17 @@ public class SetupVehicleManager implements Runnable{
         boolean found = false;
         try {
             while (!found) {
-                receivedMsg = vehiclesStatusListener.getLastMessage();
+                do {
+                    receivedMsg = vehiclesStatusListener.getLastMessage();
+                    try {
+                        Thread.sleep(1000);
+                    } catch (InterruptedException e){
+                        e.getStackTrace();
+                    }
+                }
+                while (receivedMsg==null);
                 JSONObject jsonObj = (JSONObject) parser.parse(new String(receivedMsg.getPayload()));
                 JSONArray vehicles = (JSONArray) jsonObj.get("value");
-                System.out.print("INFO: Discovered vehicles: " + vehicles+"\n");
                 for (int i = 0; i < vehicles.size(); i++) {
                     String foundVehicleId = (String) vehicles.get(i);
                     if (foundVehicleId.equals(vehicleId)) {
@@ -113,7 +128,7 @@ public class SetupVehicleManager implements Runnable{
                 JSONObject jsonObj = (JSONObject) parser.parse(new String(receivedMsg.getPayload()));
                 connectionStatus = (String) jsonObj.get("value");
                 System.out.printf("Status of vehicle %s: %s \n",this.mqttHandler.getVehicleId(), connectionStatus);
-                if (Objects.equals(connectionStatus, "ready")){
+                if (Objects.equals(connectionStatus, "connected")||Objects.equals(connectionStatus, "ready")){
                     return;
                 }
             }

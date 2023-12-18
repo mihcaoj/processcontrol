@@ -18,9 +18,8 @@ public class View extends JFrame implements Observer {
     private JSlider speedSlider;
     private JLabel laneOffsetLabel;
     private JSlider laneOffsetSlider;
-
     private JToggleButton emergencyToggleButton;
-
+    private JLabel connectionStatusLabel;
     private JLabel trackIdLabel;
     private JLabel turningStatusLabel;
     private JLabel batteryLevelLabel;
@@ -29,7 +28,6 @@ public class View extends JFrame implements Observer {
 
     public View(SteeringModel steeringModel, VehicleInfoModel vehicleInfoModel){
         super("Hyperdrive");
-
         this.steeringModel = steeringModel;
         this.vehicleInfoModel = vehicleInfoModel;
         this.steeringModel.addObserver(this);
@@ -60,7 +58,7 @@ public class View extends JFrame implements Observer {
         steeringPanel.setLayout(new GridLayout(1,3));
         JPanel scrollBarsPanel = new JPanel();
         JPanel emergencyPanel = new JPanel();
-        emergencyPanel.setPreferredSize(new Dimension(200,200));
+        emergencyPanel.setPreferredSize(new Dimension(200,300));
         JPanel lightsPanel = new JPanel();
         steeringPanel.add(scrollBarsPanel);
         steeringPanel.add(emergencyPanel);
@@ -113,16 +111,26 @@ public class View extends JFrame implements Observer {
         laneOffsetPanel.add(laneOffsetSlider);
         setMinMaxSpeedLaneOffset();
 
-        // Emergency control
+        // Emergency control and connection status
         this.emergencyToggleButton = new JToggleButton("Activate emergency");
         this.emergencyToggleButton.setPreferredSize(new Dimension(180, 50));
+        this.emergencyToggleButton.setHorizontalAlignment(JToggleButton.CENTER);
         emergencyToggleButton.addActionListener(e -> {
             boolean emergency = emergencyToggleButton.isSelected();
             String text = emergency ? "Deactivate emergency": "Activate emergency";
             this.emergencyToggleButton.setText(text);
             this.steeringModel.setEmergency(emergencyToggleButton.isSelected());
         });
+        JLabel emptyLabel = new JLabel();
+        emptyLabel.setPreferredSize(new Dimension(180, 50));
+        this.connectionStatusLabel = new JLabel("Connection status: UNKNOWN", JLabel.CENTER);
+        this.connectionStatusLabel.setOpaque(true);
+        this.connectionStatusLabel.setBackground(Color.GRAY);
+        this.connectionStatusLabel.setForeground(Color.BLACK);
+        this.connectionStatusLabel.setPreferredSize(new Dimension(180, 50));
         emergencyPanel.add(emergencyToggleButton);
+        emergencyPanel.add(emptyLabel);
+        emergencyPanel.add(connectionStatusLabel);
 
         // Lights control
         lightsPanel.setLayout(new GridLayout(0,1));
@@ -161,7 +169,8 @@ public class View extends JFrame implements Observer {
 
 
         // ====== VEHICLE INFO PANEL =======
-        infoPanel.setLayout(new GridLayout(0,2));
+        infoPanel.setLayout(new GridLayout(1,2));
+        infoPanel.setMaximumSize(new Dimension(1000,200));
 
         // --- Track Info ---
         JPanel trackPanel = new JPanel();
@@ -178,7 +187,7 @@ public class View extends JFrame implements Observer {
 
         // --- Battery Info ---
         JPanel batteryPanel = new JPanel();
-        batteryPanel.setLayout(new GridLayout(0,1));
+        batteryPanel.setLayout(new GridLayout(3,1));
         this.batteryLevelLabel = new JLabel();
         this.batteryLevelLabel.setHorizontalAlignment(JLabel.CENTER);
         this.batteryLevelLabel.setText("Battery level");
@@ -192,6 +201,8 @@ public class View extends JFrame implements Observer {
         this.batteryProgressBar.setStringPainted(true);
         this.batteryProgressBar.setString("Unknown");
         this.batteryProgressBar.setValue(0);
+        this.batteryProgressBar.setPreferredSize(new Dimension(300,30));
+        this.batteryProgressBar.setMaximumSize(new Dimension(500,40));
         batteryPanel.add(batteryLevelLabel);
         batteryPanel.add(batteryProgressBar);
         batteryPanel.add(lowBatteryLabel);
@@ -214,6 +225,26 @@ public class View extends JFrame implements Observer {
 
     public void updateLaneOffsetLabel(int laneOffsetValue){
         laneOffsetLabel.setText("Wished lane offset: " + laneOffsetValue);
+    }
+
+    public void updateConnectionStatus(String connectionStatus){
+        Color bgColor = Color.GRAY;
+        switch (connectionStatus){
+            case "ready":
+            case "connected":
+                bgColor = Color.GREEN;
+                break;
+            case "connecting":
+                bgColor = Color.BLUE;
+                break;
+            case "lost":
+            case "disconnecting":
+            case "disconnected":
+                bgColor = Color.RED;
+                break;
+        }
+        this.connectionStatusLabel.setBackground(bgColor);
+        this.connectionStatusLabel.setText("Connection status: " + connectionStatus);
     }
 
     public void updateTrackIdLabel(int trackId){

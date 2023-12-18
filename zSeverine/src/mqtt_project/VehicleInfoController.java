@@ -1,5 +1,6 @@
 package mqtt_project;
 
+import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
@@ -10,12 +11,15 @@ import java.util.Observable;
 import java.util.Observer;
 
 public class VehicleInfoController implements Observer, Runnable {
+    private final MqttHandler mqttHandler;
     private final VehicleInfoModel vehicleInfoModel;
     private final View view;
-    private final MessageListener batteryStatusListener;
+    private final String connectIntentTopic;
+    private final MessageListener connectionStatusListener;
     private final MessageListener speedEventListener;
     private final MessageListener trackEventListener;
     private final MessageListener wheelDistanceEventListener;
+    private final MessageListener batteryStatusListener;
     private final JSONParser parser;
 
     public VehicleInfoController(MqttHandler mqttHandler, VehicleInfoModel vehicleInfoModel, View view) {
@@ -23,27 +27,33 @@ public class VehicleInfoController implements Observer, Runnable {
         this.vehicleInfoModel = vehicleInfoModel;
         this.vehicleInfoModel.addObserver(this);
         this.view = view;
+        this.mqttHandler = mqttHandler;
 
-        // Subscribe to battery status of the vehicle
-        String batteryStatusTopic = topicPathByName.get("singleVehicleBatteryStatus");
-        this.batteryStatusListener = new MessageListener(batteryStatusTopic);
-        mqttHandler.subscribe(batteryStatusTopic, this.batteryStatusListener);
-
-        // Subscribe to track event of the vehicle
-        String trackEventTopic = topicPathByName.get("singleVehicleTrackEvent");
-        this.trackEventListener = new MessageListener(trackEventTopic);
-        mqttHandler.subscribe(trackEventTopic, this.trackEventListener);
+        // Subscribe to connexion status event of the vehicle
+        String connectionStatusTopic = topicPathByName.get("singleVehicleStatus");
+        this.connectionStatusListener = new MessageListener(connectionStatusTopic);
+        mqttHandler.subscribe(connectionStatusTopic, connectionStatusListener);
+        this.connectIntentTopic = topicPathByName.get("singleVehicleIntent");
 
         // Subscribe to speed event of the vehicle
         String speedEventTopic = topicPathByName.get("singleVehicleSpeedEvent");
         this.speedEventListener = new MessageListener(speedEventTopic);
         mqttHandler.subscribe(speedEventTopic, this.speedEventListener);
 
+        // Subscribe to track event of the vehicle
+        String trackEventTopic = topicPathByName.get("singleVehicleTrackEvent");
+        this.trackEventListener = new MessageListener(trackEventTopic);
+        mqttHandler.subscribe(trackEventTopic, this.trackEventListener);
+
         // Subscribe to wheelDistance event of the vehicle
         String wheelDistanceEventTopic = topicPathByName.get("singleVehicleWheelDistanceEvent");
         this.wheelDistanceEventListener = new MessageListener(wheelDistanceEventTopic);
         mqttHandler.subscribe(wheelDistanceEventTopic, this.wheelDistanceEventListener);
 
+        // Subscribe to battery status of the vehicle
+        String batteryStatusTopic = topicPathByName.get("singleVehicleBatteryStatus");
+        this.batteryStatusListener = new MessageListener(batteryStatusTopic);
+        mqttHandler.subscribe(batteryStatusTopic, this.batteryStatusListener);
         this.parser = new JSONParser();
     }
 
@@ -51,6 +61,19 @@ public class VehicleInfoController implements Observer, Runnable {
     public void update(Observable o, Object arg) {
         if (o instanceof VehicleInfoModel) {
             switch ((int) arg){
+                case VehicleInfoModel.CONNECTION_UPDATE:
+                    String connectionStatus = this.vehicleInfoModel.getConnectionStatus();
+                    view.updateConnectionStatus(connectionStatus);
+                    if (connectionStatus.equals("lost") || connectionStatus.equals("disconnecting") || connectionStatus.equals("disconnected")){
+                        String connectIntentMsg = MessageHandler.createIntentMsg("connect", new String[][]{{"value", "true"}});
+                        try {
+                            this.mqttHandler.publish(connectIntentTopic, connectIntentMsg);
+                        } catch (MqttException e){
+                            e.getMessage();
+                            e.getStackTrace();
+                        }
+                    }
+                    break;
                 case VehicleInfoModel.SPEED_UPDATE:
                     view.updateMeasuredSpeedLabel(this.vehicleInfoModel.getMeasuredSpeed());
                     break;
@@ -70,6 +93,7 @@ public class VehicleInfoController implements Observer, Runnable {
     @Override
     public void run() {
         while(true) {
+            retrieveConnexionStatus();
             measureBatteryLevel();
             measureSpeed();
             measureTrackId();
@@ -77,6 +101,21 @@ public class VehicleInfoController implements Observer, Runnable {
         }
     }
 
+    private void retrieveConnexionStatus(){
+        MqttMessage receivedMsg;
+        try {
+            String connectionStatus = "UNKNOWN";
+            receivedMsg = this.connectionStatusListener.getLastMessage();
+            if (receivedMsg!=null) {
+                JSONObject jsonObj = (JSONObject) this.parser.parse(new String(receivedMsg.getPayload()));
+                connectionStatus = (String) jsonObj.get("value");
+            }
+            this.vehicleInfoModel.setConnectionStatus(connectionStatus);
+        } catch (ParseException e) {
+            System.out.println(e.getMessage());
+            e.getStackTrace();
+        }
+    }
     private void measureSpeed(){
         MqttMessage receivedMsg;
         try {
