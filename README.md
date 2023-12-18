@@ -33,6 +33,7 @@ This project utilizes the MQTT protocol for communication with the Anki Hyperdri
    - Turn lights on and off at will.
    - See the current battery level of the selected vehicle.
    - See which track the vehicle is on and if said track is a turning track or not.
+   - If the battery level of the selected vehicle is below the threshold of 20, a popup will appear warning the user that the battery is low.
 
 **Threads:**
 
