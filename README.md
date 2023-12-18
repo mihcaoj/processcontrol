@@ -64,6 +64,7 @@ TODO: ADD REST OF THE FEATURES
 **Run the code**:
 * In the ``Main`` file, choose the ``vehicleId`` among the provided list
 * Run the ``Main`` file
+* Play with the GUI interface (cf. below)
 
 **Threads**: For this Java implementation, after discovering and connecting to the vehicle, two Threads are used:
 
@@ -76,11 +77,15 @@ TODO: ADD REST OF THE FEATURES
 * Two sliders to control the speed and the lane offset on the circuit
 * Radio buttons to control lights
 * A toggle button to activate or deactivate emergency. 
-** When activating emergency flag, the speed and lane offset sliders min and max values are set to 0 and the vehicle stops.
-** When deactivating emergency flag, the vehicle should begin again at wished speed.
-* Information about current track id and estimation if it is a turning track, as well as battery level are displayed. 
-** In case of low battery, a message displays to inform the user that the speed has been reduced because of low battery.
-
-**Clean Up:**
+  * When activating emergency flag, the speed and lane offset sliders min and max values are set to 0 and the vehicle stops.
+  * When deactivating emergency flag, the vehicle should begin again at wished speed.
+* Information about current track id and estimation if it is a turning track, as well as battery level are displayed.
+  * In case of low battery, a message displays to inform the user that the speed has been reduced because of low battery.
+    ![Java GUI](img/java_low_battery.png "GUI implemented with Java")
 
 **Known Issues:**
+* The battery topic from vehicles is not really reliable. It never goes below 75 (on a scale from 0 to 100), even in case battery is fast empty. 
+Hence, the "low battery" feature is never activated.
+* In case of two programs controlling the same vehicle, if the other program activates emergency, it is not detected by Java implementation. 
+In order to include this feature, Java implementation should add a subscription to an "emergency topic" and also publish on this topic when activating/deactivating emergency flag.
+
