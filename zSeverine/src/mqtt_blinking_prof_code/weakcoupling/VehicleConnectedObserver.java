@@ -55,7 +55,7 @@ public class VehicleConnectedObserver implements MessageListener, Runnable {
                 }
             }
             {
-                System.out.println("Start ovserving the status of vehicle: " + vehicleId);
+                System.out.println("Start observing the status of vehicle: " + vehicleId);
                 mqttHandler.subscribe("Anki/Vehicles/U/" + vehicleId + "/S/status");
                 {
                     boolean conditionAchieved = false;

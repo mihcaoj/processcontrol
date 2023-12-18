@@ -1,27 +1,31 @@
 package mqtt_project;
 
 import org.eclipse.paho.client.mqttv3.MqttMessage;
-
+// TODO remove:
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
 public class MessageListener {
     private final String topic;
-    private final BlockingQueue<MqttMessage> messageQueue;
+    private MqttMessage lastMessage;
+    // TODO remove: private final BlockingQueue<MqttMessage> messageQueue;
     public MessageListener(String topic){
         this.topic = topic;
-        this.messageQueue = new LinkedBlockingQueue<>();
+        this.lastMessage=null;
+        // TODO remove: this.messageQueue = new LinkedBlockingQueue<>();
     };
 
     public void addMessage(MqttMessage payload){
-        messageQueue.offer(payload);
+        this.lastMessage = payload;
+        //TODO: remove messageQueue.offer(payload);
     };
 
     public String getTopic(){
         return topic;
     };
 
-    public BlockingQueue<MqttMessage> getMessageQueue() {
-        return messageQueue;
+    //TODO remove: public BlockingQueue<MqttMessage> getMessageQueue() {return messageQueue;}
+    public MqttMessage getLastMessage(){
+        return lastMessage;
     }
 }

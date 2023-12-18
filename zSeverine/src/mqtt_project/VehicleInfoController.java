@@ -80,10 +80,10 @@ public class VehicleInfoController implements Observer, Runnable {
     private void measureSpeed(){
         MqttMessage receivedMsg;
         try {
-            receivedMsg = this.speedEventListener.getMessageQueue().take();
+            receivedMsg = this.speedEventListener.getLastMessage();
             JSONObject jsonObj = (JSONObject) this.parser.parse(new String(receivedMsg.getPayload()));
             this.vehicleInfoModel.setMeasuredSpeed(((Long) jsonObj.get("value")).intValue());
-        } catch (ParseException | InterruptedException e) {
+        } catch (ParseException e) {
             System.out.println(e.getMessage());
             e.getStackTrace();
         }
@@ -92,10 +92,10 @@ public class VehicleInfoController implements Observer, Runnable {
     private void measureTrackId(){
         MqttMessage receivedMsg;
         try {
-            receivedMsg = this.trackEventListener.getMessageQueue().take();
+            receivedMsg = this.trackEventListener.getLastMessage();
             JSONObject jsonObj = (JSONObject) this.parser.parse(new String(receivedMsg.getPayload()));
-            this.vehicleInfoModel.setCurrentTrackId(((Long) jsonObj.get("trackID")).intValue());
-        } catch (ParseException | InterruptedException e) {
+            this.vehicleInfoModel.setCurrentTrackId(((Long) jsonObj.get("trackId")).intValue());
+        } catch (ParseException e) {
             System.out.println(e.getMessage());
             e.getStackTrace();
         }
@@ -104,12 +104,12 @@ public class VehicleInfoController implements Observer, Runnable {
     private void measureWheelDistance() {
         MqttMessage receivedMsg;
         try {
-            receivedMsg = this.wheelDistanceEventListener.getMessageQueue().take();
+            receivedMsg = this.wheelDistanceEventListener.getLastMessage();
             JSONObject jsonObj = (JSONObject) this.parser.parse(new String(receivedMsg.getPayload()));
             int leftWheelDistance = ((Long) jsonObj.get("left")).intValue();
             int rightWheelDistance = ((Long) jsonObj.get("right")).intValue();
             this.vehicleInfoModel.estimateIfTurning(leftWheelDistance, rightWheelDistance);
-        } catch (ParseException | InterruptedException e) {
+        } catch (ParseException e) {
             System.out.println(e.getMessage());
             e.getStackTrace();
         }
@@ -118,12 +118,12 @@ public class VehicleInfoController implements Observer, Runnable {
     public void measureBatteryLevel(){
         MqttMessage receivedMsg;
         try {
-            receivedMsg = this.batteryStatusListener.getMessageQueue().take();
+            receivedMsg = this.batteryStatusListener.getLastMessage();
             JSONObject jsonObj = (JSONObject) this.parser.parse(new String(receivedMsg.getPayload()));
             int batteryLevel = ((Long) jsonObj.get("value")).intValue();
             this.vehicleInfoModel.setBatteryLevel(batteryLevel);
             view.updateBatteryLevelLabel(batteryLevel);
-        } catch (ParseException | InterruptedException e) {
+        } catch (ParseException e) {
             System.out.println(e.getMessage());
             e.getStackTrace();
         }

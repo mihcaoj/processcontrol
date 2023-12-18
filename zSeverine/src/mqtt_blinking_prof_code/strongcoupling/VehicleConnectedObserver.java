@@ -20,7 +20,7 @@ public class VehicleConnectedObserver implements MessageListener, Runnable {
     ;
 
     private final ObjectMapper objectMapper = new ObjectMapper();
-    private JSONParser parser = new JSONParser();
+    private final JSONParser parser = new JSONParser();
 
     private final MqttHandler mqttHandler;
     private final BlockingQueue<MqttMessageRecord> mqttMessageQueue = new LinkedBlockingQueue<>();

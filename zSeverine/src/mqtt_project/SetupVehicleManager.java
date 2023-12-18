@@ -58,7 +58,7 @@ public class SetupVehicleManager implements Runnable{
         MqttMessage receivedMsg;
         boolean discovering = false;
         try {while (!discovering) {
-            receivedMsg = discoveringStatusListener.getMessageQueue().take();
+            receivedMsg = discoveringStatusListener.getLastMessage();
             JSONObject jsonObj = (JSONObject) parser.parse(new String(receivedMsg.getPayload()));
             if ((Boolean) jsonObj.get("value")) {
                 discovering = true;
@@ -69,7 +69,7 @@ public class SetupVehicleManager implements Runnable{
                 mqttHandler.publish(discoverIntentTopic, discoverIntentMsg);
             }
         }
-        } catch (ParseException | MqttException | InterruptedException e) {
+        } catch (ParseException | MqttException e) {
             e.getMessage();
             e.getStackTrace();
         }
@@ -80,7 +80,7 @@ public class SetupVehicleManager implements Runnable{
         boolean found = false;
         try {
             while (!found) {
-                receivedMsg = vehiclesStatusListener.getMessageQueue().take();
+                receivedMsg = vehiclesStatusListener.getLastMessage();
                 JSONObject jsonObj = (JSONObject) parser.parse(new String(receivedMsg.getPayload()));
                 JSONArray vehicles = (JSONArray) jsonObj.get("value");
                 System.out.print("INFO: Discovered vehicles: " + vehicles+"\n");
@@ -92,7 +92,7 @@ public class SetupVehicleManager implements Runnable{
                     }
                 }
             }
-        } catch (ParseException | InterruptedException e) {
+        } catch (ParseException e) {
             e.getMessage();
             e.getStackTrace();
         }
@@ -109,7 +109,7 @@ public class SetupVehicleManager implements Runnable{
             String connectionStatus;
             while (true) {
                 // Verify the vehicle is connected
-                receivedMsg = this.vehicleStatusListener.getMessageQueue().take();
+                receivedMsg = this.vehicleStatusListener.getLastMessage();
                 JSONObject jsonObj = (JSONObject) parser.parse(new String(receivedMsg.getPayload()));
                 connectionStatus = (String) jsonObj.get("value");
                 System.out.printf("Status of vehicle %s: %s \n",this.mqttHandler.getVehicleId(), connectionStatus);
@@ -117,7 +117,7 @@ public class SetupVehicleManager implements Runnable{
                     return;
                 }
             }
-        } catch (MqttException | InterruptedException | ParseException e){
+        } catch (MqttException | ParseException e){
             e.getMessage();
             e.getStackTrace();
         }

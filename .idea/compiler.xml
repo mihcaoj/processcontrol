@@ -7,7 +7,6 @@
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
         <module name="ch.quantasy.hyperdrive.blinking" />
-        <module name="zSeverine" />
       </profile>
     </annotationProcessing>
   </component>

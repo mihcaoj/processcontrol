@@ -1,5 +1,7 @@
 package mqtt_project;
 
+import com.formdev.flatlaf.FlatDarkLaf;
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
@@ -23,6 +25,7 @@ public class View extends JFrame implements Observer {
     private JLabel turningStatusLabel;
     private JLabel batteryLevelLabel;
     private JLabel lowBatteryLabel;
+    private JProgressBar batteryProgressBar;
 
     public View(SteeringModel steeringModel, VehicleInfoModel vehicleInfoModel){
         super("Hyperdrive");
@@ -42,6 +45,11 @@ public class View extends JFrame implements Observer {
         this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         this.setLocationRelativeTo(null);
         this.setLayout(new GridLayout(2, 1));
+        try {
+            UIManager.setLookAndFeel(new FlatDarkLaf());
+        } catch (UnsupportedLookAndFeelException e){
+            e.printStackTrace();
+        }
 
         JPanel steeringPanel = new JPanel();
         JPanel infoPanel = new JPanel();
@@ -153,27 +161,41 @@ public class View extends JFrame implements Observer {
 
 
         // ====== VEHICLE INFO PANEL =======
-        infoPanel.setLayout(new GridLayout(0,3));
+        infoPanel.setLayout(new GridLayout(0,2));
+
+        // --- Track Info ---
+        JPanel trackPanel = new JPanel();
+        trackPanel.setLayout(new GridLayout(0,1));
         this.trackIdLabel = new JLabel();
         this.trackIdLabel.setHorizontalAlignment(JLabel.CENTER);
         updateTrackIdLabel(this.vehicleInfoModel.getCurrentTrackId());
         this.turningStatusLabel = new JLabel();
         this.turningStatusLabel.setHorizontalAlignment(JLabel.CENTER);
         updateTurningStatusLabel(this.vehicleInfoModel.getTurningStatus());
+        trackPanel.add(trackIdLabel);
+        trackPanel.add(turningStatusLabel);
+        infoPanel.add(trackPanel);
+
+        // --- Battery Info ---
+        JPanel batteryPanel = new JPanel();
+        batteryPanel.setLayout(new GridLayout(0,1));
         this.batteryLevelLabel = new JLabel();
         this.batteryLevelLabel.setHorizontalAlignment(JLabel.CENTER);
+        this.batteryLevelLabel.setText("Battery level");
         this.lowBatteryLabel = new JLabel();
         this.lowBatteryLabel.setHorizontalAlignment(JLabel.CENTER);
         this.lowBatteryLabel.setText("!! LOW BATTERY -> Reduced speed !!");
-        updateBatteryLevelLabel(this.vehicleInfoModel.getBatteryLevel());
-        infoPanel.add(trackIdLabel);
-        infoPanel.add(turningStatusLabel);
-        JPanel batteryPanel = new JPanel();
-        batteryPanel.setLayout(new GridLayout(0,1));
+        this.lowBatteryLabel.setVisible(false);
+        this.batteryProgressBar = new JProgressBar();
+        this.batteryProgressBar.setMinimum(0);
+        this.batteryProgressBar.setMaximum(100);
+        this.batteryProgressBar.setStringPainted(true);
+        this.batteryProgressBar.setString("Unknown");
+        this.batteryProgressBar.setValue(0);
         batteryPanel.add(batteryLevelLabel);
+        batteryPanel.add(batteryProgressBar);
         batteryPanel.add(lowBatteryLabel);
         infoPanel.add(batteryPanel);
-
         pack();
         setVisible(true);
     }
@@ -199,8 +221,9 @@ public class View extends JFrame implements Observer {
     }
 
     public void updateBatteryLevelLabel(int batteryLevel){
-        batteryLevelLabel.setText("Battery level: "+ batteryLevel);
         lowBatteryLabel.setVisible(this.vehicleInfoModel.getLowBatteryStatus());
+        this.batteryProgressBar.setValue(batteryLevel);
+        this.batteryProgressBar.setString(batteryLevel+"%");
     }
 
     public void setMinMaxSpeedLaneOffset(){
@@ -224,6 +247,7 @@ public class View extends JFrame implements Observer {
             minLaneOffset =-100;
             maxLaneOffset =2000;
         }
+        System.out.println("Min speed: "+ minSpeed+ " max Speed: "+ maxSpeed);// TODO remove debug
         this.speedSlider.setMinimum(minSpeed);
         this.speedSlider.setMaximum(maxSpeed);
         int oldWishedSpeed = this.steeringModel.getWishedSpeed();

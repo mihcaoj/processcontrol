@@ -37,7 +37,7 @@ public class VehicleInfoModel extends Observable {
     }
 
     public void estimateIfTurning(int leftWheelDistance, int rightWheelDistance){
-        this.turningStatus = leftWheelDistance < rightWheelDistance - 10 | rightWheelDistance < leftWheelDistance - 10;
+        this.turningStatus = leftWheelDistance < rightWheelDistance - 4 | rightWheelDistance < leftWheelDistance - 4;
         setChanged();
         notifyObservers(VehicleInfoModel.TURNING_STATUS_UPDATE);
     }
