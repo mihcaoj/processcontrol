@@ -1,1 +1,0 @@
-Le code mqttHandler est celui qui marche, permettant de se connecter et d'agir sur le vehicule. Il a des fonctions pour tout, le rendant modulable
