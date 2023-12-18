@@ -22,7 +22,7 @@ public class Main {
         SetupVehicleManager setupVehicleManager = new SetupVehicleManager(mqttHandler);
         setupVehicleManager.run();
 
-        // MVC pattern split in two with a common view
+        // MVC pattern split in two (two models and two controllers) with a common view
         SteeringModel steeringModel = new SteeringModel();
         VehicleInfoModel vehicleInfoModel = new VehicleInfoModel();
 
