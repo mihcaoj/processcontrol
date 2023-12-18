@@ -5,6 +5,8 @@ import org.eclipse.paho.client.mqttv3.MqttException;
 import java.util.Observable;
 import java.util.Observer;
 
+/*This controller communicates changes in SteeringModel variables to the MQTT broker (via a publication)
+so that the MQTT broker in turn communicates the corresponding instructions to the target vehicle. */
 public class SteeringController implements Observer, Runnable{
     private final SteeringModel steeringModel;
     private final MqttHandler mqttHandler;

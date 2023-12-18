@@ -54,6 +54,8 @@ public class SetupVehicleManager implements Runnable{
         cleanUp();
     }
 
+    /*Verifies if MQTT broker is already in "discovering" mode. If not, this method sends an intent to activate this mode.
+    * This allows the MQTT broker to detect which vehicle are connected to it.*/
     private void activateDiscovering() {
         MqttMessage receivedMsg;
         boolean discovering = false;
@@ -83,6 +85,7 @@ public class SetupVehicleManager implements Runnable{
         }
     }
 
+    /*Verifies that the target vehicle is well recognized by the MQTT broker.*/
     private void findVehicle(String vehicleId) {
         MqttMessage receivedMsg;
         boolean found = false;
@@ -113,6 +116,7 @@ public class SetupVehicleManager implements Runnable{
         }
     }
 
+    /*Establish the connection between our client and the vehicle through MQTT broker.*/
     private void connectVehicle(){
         try {
             // Publish an intent to connect the vehicle
@@ -138,6 +142,7 @@ public class SetupVehicleManager implements Runnable{
         }
     }
 
+    /*Remove all subscriptions*/
     private void cleanUp() {
         try {
             this.mqttHandler.unsubscribe(discoveringStatusTopic);

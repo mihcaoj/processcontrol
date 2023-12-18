@@ -9,7 +9,7 @@ import org.eclipse.paho.client.mqttv3.MqttMessage;
 import java.util.HashSet;
 import java.util.Set;
 
-// Component handling incoming messages. It is responsible for receiving, processing, and potentially taking action based on the content of the messages.
+/*Component handling incoming messages (reception + processing)*/
 public class MessageHandler implements MqttCallbackExtended {
 
     private final Set<MessageListener> msgListeners;

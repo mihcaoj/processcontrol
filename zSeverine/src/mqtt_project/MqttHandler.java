@@ -15,7 +15,7 @@ public class MqttHandler {
     public MqttHandler(String mqttBrokerUri, String clientId, String vehicleId) throws MqttException {
         this.vehicleId = vehicleId;
 
-        // client creation - MemoryPersistence make the state to be in RAM, not on disk.
+        // client creation - MemoryPersistence makes the state to be in RAM, not on disk.
         this.client = new MqttAsyncClient(mqttBrokerUri, clientId, new MemoryPersistence());
 
         // message handling
@@ -36,7 +36,7 @@ public class MqttHandler {
             e.getStackTrace();
         }
 
-        // Set up a dictionary (key: TopicName, value: TopicPath)
+        // Set up a topic dictionary for the MQTT hyperdrive API (key: TopicName, value: TopicPath)
         topicPathByName = new Hashtable<>();
         topicPathByName.put("HostIntent","Anki/Hosts/U/hyperdrive/I/"+clientId);
         topicPathByName.put("HostDiscoveringStatus","Anki/Hosts/U/hyperdrive/S/discovering");
@@ -49,6 +49,7 @@ public class MqttHandler {
         topicPathByName.put("singleVehicleWheelDistanceEvent", "Anki/Vehicles/U/"+vehicleId+"/E/wheelDistance");
     }
 
+    // Subscribe to a specific topic (then each time a new message is published in the topic, we save it)
     public void subscribe(String topic, MessageListener msgListener){
         try {
             client.subscribe(topic, 1);  // QoS level 1
@@ -60,6 +61,7 @@ public class MqttHandler {
         }
     }
 
+    // Unsubscribe from a specific topic
     public void unsubscribe(String topic) throws MqttException {
         try {
             client.unsubscribe(topic);
@@ -71,6 +73,7 @@ public class MqttHandler {
         }
     }
 
+    // Publish a message (payload) on a specific topic
     public void publish(String topic, String payload) throws MqttException {
         MqttMessage message = new MqttMessage(payload.getBytes());
         client.publish(topic, message);

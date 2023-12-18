@@ -2,6 +2,10 @@ package mqtt_project;
 
 import java.util.Observable;
 
+/*In MVC, the Model uses "Observer" design pattern by being an observable, containing the application states and logic for state change.
+ Controller and View registers as observers of the Model to be notified as soon as the Model state changes.
+ This Model stores information about the target vehicle, like its connection status, measured speed, trackId and batteryLevel.
+ It also estimates if the vehicle is on a turning track, depending on the difference between wheel distances on the left, resp. on the right*/
 public class VehicleInfoModel extends Observable {
     public static final int CONNECTION_UPDATE = 1;
     public static final int SPEED_UPDATE = 2;

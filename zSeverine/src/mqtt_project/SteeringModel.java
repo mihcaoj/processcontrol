@@ -2,8 +2,9 @@ package mqtt_project;
 
 import java.util.Observable;
 
-// In MVC, the Model uses "Observer" design pattern by being an observable, containing the application states and logic for state change.
-// Controller and View registers as observers of the Model to be notified as soon as the Model state changes.
+/*In MVC, the Model uses "Observer" design pattern by being an observable, containing the application states and logic for state change.
+ Controller and View registers as observers of the Model to be notified as soon as the Model state changes.
+ This Model stores all variables to steer the vehicle: the wished speed, lane offset and lights as well as emergency flag */
 public class SteeringModel extends Observable {
     public static final int WISHED_SPEED_UPDATE = 1;
     public static final int WISHED_LANE_OFFSET = 2;

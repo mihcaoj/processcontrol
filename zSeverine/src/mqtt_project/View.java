@@ -9,7 +9,13 @@ import java.awt.event.MouseEvent;
 import java.util.Observable;
 import java.util.Observer;
 
-
+/*This view is simultaneously the view for steering MVC and vehicle info MVC.
+* - For steering MVC, it displays graphical components (sliders for speed and lane offset, radio buttons for lights and toggle button to (de)activate emergency status.
+*   On each of the component, an event listener determines the actions performed when user manipulate these components.
+*   The view sends the steering values set by the user to the steeringModel.
+*   When emergency toggle button is selected, the vehicle speed and the lane offset are set on 0 until deactivation of emergency flag.
+* - For the vehicle info MVC, it waits for the instruction of vehicleInfoController to know the labels to update
+*   and to which value set the battery gauge. Below 30% battery, a label warns the user that speed is reduced because of low battery.*/
 public class View extends JFrame implements Observer {
     private final SteeringModel steeringModel;
     private final VehicleInfoModel vehicleInfoModel;
@@ -292,7 +298,6 @@ public class View extends JFrame implements Observer {
             minLaneOffset =-100;
             maxLaneOffset =2000;
         }
-        System.out.println("Min speed: "+ minSpeed+ " max Speed: "+ maxSpeed);// TODO remove debug
         this.speedSlider.setMinimum(minSpeed);
         this.speedSlider.setMaximum(maxSpeed);
         int oldWishedSpeed = this.steeringModel.getWishedSpeed();
