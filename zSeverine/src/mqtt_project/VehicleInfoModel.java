@@ -48,7 +48,7 @@ public class VehicleInfoModel extends Observable {
 
     public void setBatteryLevel(int batteryLevel){
         this.batteryLevel = batteryLevel;
-        this.lowBatteryStatus = this.batteryLevel < 70;
+        this.lowBatteryStatus = this.batteryLevel < 75;
         setChanged();
         notifyObservers(VehicleInfoModel.BATTERY_LEVEL_UPDATE);
     }

@@ -6,9 +6,11 @@ This project utilizes the MQTT protocol for communication with the Anki Hyperdri
 
 -  Choose which vehicle you want to connect to
 -  **_Emergency Flag Control:_** Toggle the emergency flag to enable or disable emergency stops.
--  **_Velocity and Acceleration Control:_** Adjust the velocity and acceleration of the vehicle using sliders in the GUI.
+-  **_Velocity and Acceleration Control:_** Adjust the velocity and acceleration of the vehicle using sliders in the GUI. The acceleration control is available only in the Python implementation.
 -  **_Lane Change:_** Change lanes to the left or right, with options to modify offset, velocity, and acceleration.
 -  **_Lights Control:_** Turn the vehicle lights on or off.
+-  **_Track Information:_** Retrieve the trackId on which the vehicle runs currently and estimate if it is a turning track or not.
+-  **_Battery Level Information:_** Retrieve the battery level and limit speed if the battery level is too low
 
 TODO: ADD REST OF THE FEATURES
 
@@ -53,3 +55,32 @@ TODO: ADD REST OF THE FEATURES
 
 
 ## For the Java program:
+**Prerequisites**: Ensure JDK and Apache Maven are installed.
+
+**Compile the project**: 
+* In a terminal, navigate to the directory containing the ``pom.xml`` file and ``src`` directory
+* Run the following bash command: ``mvn clean install`` to compile code.
+
+**Run the code**:
+* In the ``Main`` file, choose the ``vehicleId`` among the provided list
+* Run the ``Main`` file
+
+**Threads**: For this Java implementation, after discovering and connecting to the vehicle, two Threads are used:
+
+- **_Steering Thread:_** Used to control the vehicle speed, lane, lights and toggle emergency flag.
+  
+- **_VehicleInfo Thread:_** Used to retrieve information about the vehicle status: on which track it is, if it is a turning track, the measured speed and the battery level.
+
+**GUI Interface:**
+![Java GUI](img/java_gui.png "GUI implemented with Java")
+* Two sliders to control the speed and the lane offset on the circuit
+* Radio buttons to control lights
+* A toggle button to activate or deactivate emergency. 
+** When activating emergency flag, the speed and lane offset sliders min and max values are set to 0 and the vehicle stops.
+** When deactivating emergency flag, the vehicle should begin again at wished speed.
+* Information about current track id and estimation if it is a turning track, as well as battery level are displayed. 
+** In case of low battery, a message displays to inform the user that the speed has been reduced because of low battery.
+
+**Clean Up:**
+
+**Known Issues:**

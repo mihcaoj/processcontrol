@@ -205,7 +205,11 @@ public class View extends JFrame implements Observer {
     }
 
     public void updateMeasuredSpeedLabel(int measuredSpeed) {
-        measuredSpeedLabel.setText("Measured speed: " + measuredSpeed);
+        if (measuredSpeed == 10000){   // Initialization, before any measure is possible
+            measuredSpeedLabel.setText("Measured speed: UNKNOWN");
+        } else {
+            measuredSpeedLabel.setText("Measured speed: " + measuredSpeed);
+        }
     }
 
     public void updateLaneOffsetLabel(int laneOffsetValue){
@@ -213,7 +217,11 @@ public class View extends JFrame implements Observer {
     }
 
     public void updateTrackIdLabel(int trackId){
-        trackIdLabel.setText("Current track ID: "+trackId);
+        if (trackId == 10000){
+            trackIdLabel.setText("Current track ID: UNKNOWN");
+        } else {
+            trackIdLabel.setText("Current track ID: " + trackId);
+        }
     }
 
     public void updateTurningStatusLabel(boolean turningStatus){
@@ -221,9 +229,15 @@ public class View extends JFrame implements Observer {
     }
 
     public void updateBatteryLevelLabel(int batteryLevel){
-        lowBatteryLabel.setVisible(this.vehicleInfoModel.getLowBatteryStatus());
-        this.batteryProgressBar.setValue(batteryLevel);
-        this.batteryProgressBar.setString(batteryLevel+"%");
+        if (batteryLevel==10000){
+            lowBatteryLabel.setVisible(false);
+            this.batteryProgressBar.setValue(0);
+            this.batteryProgressBar.setString("UNKNOWN");
+        } else {
+            lowBatteryLabel.setVisible(this.vehicleInfoModel.getLowBatteryStatus());
+            this.batteryProgressBar.setValue(batteryLevel);
+            this.batteryProgressBar.setString(batteryLevel + "%");
+        }
     }
 
     public void setMinMaxSpeedLaneOffset(){
