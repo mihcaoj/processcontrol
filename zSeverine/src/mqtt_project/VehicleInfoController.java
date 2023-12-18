@@ -13,7 +13,9 @@ import java.util.Observer;
 /*This controller has two roles:
 - On one side it is subscribed to topic of interest to have the last information about the target vehicle.
   It communicates to the VehicleInfoModel each changes to update the corresponding information variables.
-- When variables in VehicleInfoModel are set, the controller is informed so that it communicates the corresponding changes to do in the View.*/
+- When variables in VehicleInfoModel are set, the controller is informed so that it communicates the corresponding changes to do in the View.
+  Furthermore, when this controller receives the information that the connection status is "lost", "disconnecting" or "disconnected",
+  it sends a publication to try to reconnect to the vehicle.*/
 public class VehicleInfoController implements Observer, Runnable {
     private final MqttHandler mqttHandler;
     private final VehicleInfoModel vehicleInfoModel;
