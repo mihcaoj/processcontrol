@@ -283,7 +283,7 @@ def update_velocity_slider(value):
         payload_velocity = {
             "type": "speed",
             "payload": {
-                "velocity": int(value)
+                "velocity": float(value)
             }
         }
         publish(client, f"Anki/Vehicles/U/{vehicleID}{group_intent_topic}", payload_velocity)
@@ -299,7 +299,7 @@ def update_acceleration_slider(value):
         payload_acceleration = {
             "type": "speed",
             "payload": {
-                "velocity": int(value)
+                "acceleration": float(value)
             }
         }
         publish(client, f"Anki/Vehicles/U/{vehicleID}{group_intent_topic}", payload_acceleration)
@@ -330,6 +330,7 @@ def update_direction_label():
     direction_label.after(1000, update_direction_label)
 
 def update_turning_track_label():
+    global is_turning_track
     # Update the turning track label
     turning_track_label.config(text=f"Turning Track: {is_turning_track}")
     # Schedule the next update after 1s
@@ -352,7 +353,7 @@ def update_gui():
 
 def run_tkinter():
     def create_tkinter_window():
-        global velocity_slider, acceleration_slider, battery_label, track_label, direction_label, is_turning_track
+        global velocity_slider, acceleration_slider, battery_label, track_label, direction_label, turning_track_label, is_turning_track
         # Main application window
         app = tk.Toplevel()
         app.title("Emergency Flag Controller")
