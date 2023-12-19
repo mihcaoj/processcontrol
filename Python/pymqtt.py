@@ -7,20 +7,16 @@ import atexit
 import re
 import sys
 
-# TODO:
-#        - disconnect / cleanup
-#        - add threads
-#        - track the tracks controller (final project part 0.2.3) --- MAKE SURE IT WORKS
-#        - improve gui
-#        - change lane right and left values need to be modified to work
-#        - fix the slider for acceleration and velocity (values in between still seem to be published)
-
 ip_address = '192.168.4.1'  # ip address of the hyperdrive
 port = 1883  # port for MQTT
-client = mqtt.Client('hyperdrive')
-availableVehicles = []
-connectedVehicles = []
-vehicleID = 'd205effe02cb'  # change according to the vehicle ID
+client = mqtt.Client('hyperdrive') # mqtt client object (instance of paho mqtt class)
+availableVehicles = [] # list of available vehicles
+connectedVehicles = [] # list of connected vehicles
+vehicleID = 'd205effe02cb'  # individual vehicle that we may want to use
+vhButtons = {} # buttons for the vehicles on the UI
+
+# connect flag
+wantToConnect = True
 
 # Topics
 group_intent_topic = "/I/groupD"  # group intent topic for the vehicle
@@ -35,23 +31,24 @@ velocity_slider = None
 acceleration_slider = None
 sliders_updated = False
 
-
+# dictionnaries to store each connected vehicle's name associated with
+# its battery, track status ... and label for the UI
 battery_labels = {}
 battery_level = {}
 
 track_label = None
 current_track_id = {}
 
+LOW_BATTERY_THRESHOLD = 20
+
 turning_track_label = None
 is_turning_track = {}
 
-LOW_BATTERY_THRESHOLD = 20
-
+# thread for the UI
 tkinter_thread = None
 
+# flag to take away blinking when disconnecting from the emergency topic
 blinking_flag = True
-
-vhButtons = {}
 
 # Payloads for the lights
 payload_on = {
@@ -70,24 +67,74 @@ payload_off = {
     }
 }
 
+#  ----------------------------- BROKER CONNECTION --------------------------------
 
+# CONNECT the client to the MQTT broker
+def connect_broker():
+    global wantToConnect
+    wantToConnect = True
+    client.connect(ip_address, port=port)
+    print(f"Trying to connect to broker {ip_address}:{port}")
+
+# ON CONNECT - Callback function called when the client connects to the broker
 def on_connect(client, userdata, flags, rc):
-    # Callback function called when the client successfully connects to the broker
     print(f"Connected with result code {rc}")
-
-    payload_discover = {"type": "discover", "payload": {"value": True}}
-
-    # Publish the discover payload to the specified topic
-    publish(client, intent_topic, payload_discover)
-    print("Published the discover payload successfully")
-
+    
     # Check if the connection result code is 0, indicating a successful connection
     if rc == 0:
-        print(f"Connected to broker at {ip_address}:{port}")
+        print(f"Succesfully connected to broker at {ip_address}:{port}")
+        # make the topic discoverable
+        payload_discover = {"type": "discover", "payload": {"value": True}}
+        publish(client, intent_topic, payload_discover)
+        print("Made the host discoverable")
+    else:
+        print(f"Connection to broker {ip_address}:{port} failed")
+        print("Attempting reconnection to broker: ", ip_address, ":", port)
+        try:
+            connect_broker()
+        except Exception as e:
+            on_connect(client, userdata, connectflags, 1)
 
+#make sure on_connect is invoked automatically
+client.on_connect = on_connect
 
+# DISCONNECT from the broker
+def disconnect_broker():
+    client.disconnect()
+    global wantToConnect
+    wantToConnect = False
+    print(f"Disconnecting from broker ... {ip_address}:{port}")
+
+# handle disconnection again if it fails
+def on_disconnect(client, userdata, rc):
+    global wantToConnect
+    if wantToConnect == True:
+        print("Attempting reconnection to broker: ",ip_address,":",port)
+        try:
+            connect_broker()
+        except Exception as e:
+            global connectflags
+            on_connect(client, userdata, connectflags, 1)
+    else:
+        if rc == 0:
+            print(f"Disconnected from broker")
+        else:
+            print("Disconnection failed")
+            if (wantToConnect == False):
+                print("Attempting to disconnect from broker: ", ip_address, ":", port)
+                try:
+                    connect_broker()
+                except Exception as e:
+                    on_disconnect(client, userdata, 1)
+
+#make sure on_disconnect is invoked automatically
+client.on_disconnect = on_disconnect
+
+#  ----------------------------- VEHICLE CONNECTION, SUBSCRIBE, MESSAGES --------------------------------
+
+# HANDLING INCOMING MESSAGES
 def on_message(client, userdata, msg):
-    # Callback function called when a message is received from the broker
+    
     print(f"Received {msg.payload} from {msg.topic}")
 
     # Parse the JSON payload from the message
@@ -131,11 +178,12 @@ def on_message(client, userdata, msg):
             print("Received track information, but track_id is None.")
             current_track_id[vhID] = "None"
 
-
+#SUBSCRIBE to the list of available vehicles
 def subscribe_general(client: mqtt.Client):
-    client.subscribe("Anki/Hosts/U/hyperdrive/S/vehicles") # subscribe to the list of available vehicles
+    client.subscribe("Anki/Hosts/U/hyperdrive/S/vehicles") 
     client.on_message = on_message
 
+#SUBSCRIBE to the connected vehicle's information topics
 def subscribe_vehicle(client: mqtt.Client, vehicleID):
     topic = "Anki/Vehicles/U/" + vehicleID + "S/status"
     client.subscribe(topic)  # subscribe to the status of the vehicle
@@ -148,7 +196,8 @@ def unsubscribe_vehicle(client: mqtt.Client, vehicleID):
     client.unsubscribe(topic)  # unsubscribe from the status of the vehicle
     client.unsubscribe(f"Anki/Vehicles/U/{vehicleID}/S/battery")  # unsubscribe from the battery topic
     client.unsubscribe(f"Anki/Vehicles/U/{vehicleID}/E/track")  # unsubscribe from the track topic
-    
+
+#PUBLISH
 def publish(client: mqtt.Client, topic: str, payload: dict):
     try:
         message = json.dumps(payload)
@@ -157,7 +206,7 @@ def publish(client: mqtt.Client, topic: str, payload: dict):
     except Exception as e:
         print(f"Error publishing to topic {topic}: {e}")
 
-# connect to the desired vehicle
+# CONNECT to the desired vehicle
 def connect_vehicle(vehicle_id, button):
     topic = "Anki/Vehicles/U/" + vehicle_id + "/I/"
     connect_payload = {
@@ -186,7 +235,7 @@ def connect_vehicle(vehicle_id, button):
         vhButtons[vehicle_id].configure(command=lambda id=vehicle_id, btn=vhButtons[vehicle_id]: disconnect_vehicle(id, btn))
 
 
-# disconnect from the vehicle
+# DISCONNET from the vehicle
 def disconnect_vehicle(vehicle_id, button):
     topic = "Anki/Vehicles/U/" + vehicle_id + "/I/"
     connect_payload = {
@@ -209,8 +258,7 @@ def disconnect_vehicle(vehicle_id, button):
         vhButtons[vehicle_id].configure(bg="red")
         vhButtons[vehicle_id].configure(command=lambda id=vehicle_id, btn=vhButtons[vehicle_id]: connect_vehicle(id, btn))
 
-
-
+# BATTERY POPUP when it is too low
 def show_low_battery_popup():
     low_battery_popup = tk.Toplevel()
     low_battery_popup.title("Low Battery Warning")
@@ -370,13 +418,14 @@ def allLightsOff():
 
 
 
-# ---------------------------------------------- drive commands --------------------------------------------
+# -------------------------------------------- DRIVE COMMANDS  --------------------------------------------
 
+# SLIDE TO THE LANE ON THE RIGHT
 def change_lane_right(vehicleID):
     print("Changing to the right lane")
 
     if not emergency_flag and not sliders_updated:
-        offset = 750
+        offset = 1000
         velocity = 250
         acceleration = 250
     else:
@@ -395,11 +444,12 @@ def change_lane_right(vehicleID):
     for vehicleID in connectedVehicles:
         publish(client, f"Anki/Vehicles/U/{vehicleID}{group_intent_topic}", payload_lane)
 
+# SLIDE TO THE LANE ON THE LEFT
 def change_lane_left(vehicleID):
     print("Changing to the left lane")
 
     if not emergency_flag and not sliders_updated:
-        offset = -750
+        offset = -1000
         velocity = 250
         acceleration = 250
     else:
@@ -419,7 +469,9 @@ def change_lane_left(vehicleID):
     for vehicleID in connectedVehicles:
         publish(client, f"Anki/Vehicles/U/{vehicleID}{group_intent_topic}", payload_lane)
 
+# --------------------------------------- EMERGENCY COMMANDS ----------------------------------------
 
+# STOP THE VEHICLE ENTIRELY
 def stop_vehicle(vehicleID):
     print(f"Stopping vehicle: {vehicleID}")
     # If emergency_flag is True, set velocity and acceleration to stop the car
@@ -433,13 +485,13 @@ def stop_vehicle(vehicleID):
     pause_drive_event.set()
     pause_lane_event.set()
 
-
+# CHANGE THE STATUS OF THE EMERGENCY FLAG
 def change_flag_status():
     global emergency_flag
     emergency_flag = not emergency_flag
     print(f"Emergency flag status changed to: {emergency_flag}")
 
-
+# STOP ALL THE CARS AND MAKE THEM BLINK IF EMERGENCY
 def emergency_stop_process():
 
     client_emergency = mqtt.Client('emergency_stop_process')
@@ -505,19 +557,9 @@ def update_acceleration_slider(value):
             publish(client, f"Anki/Vehicles/U/{vehicleID}{group_intent_topic}", payload_acceleration)
         print(f"Acceleration updated to: {value}")
 
-'''def update_battery_label():
-    # Update the battery label
-    for key, value in battery_level.items():
-        battery_labels[key].config(text=f"Battery Level of {key}: {value}%")
-        battery_labels[key].pack()
-    # Schedule the next update after 1s
-    #battery_labels.after(1000, update_battery_label)'''
-
-'''def update_track_label():
-    # Update the track label
-    track_label.config(text=f"Current Track: {current_track_id}")
-    # Schedule the next update after 1s
-    track_label.after(500, update_track_label)'''
+def sliders_released():
+    global sliders_updated
+    sliders_updated = False
 
 def update_turning_track_label():
     global ibattery_labels_turning_track
@@ -535,10 +577,7 @@ def update_turning_track_label():
         else: 
             is_turning_track[key] = False
 
-def update_gui():
-    #update_battery_label()
-    #update_track_label()
-    update_turning_track_label()
+# ----------------------------------- GRAPHICAL USER INTERFACE ----------------------
 
 def run_tkinter():
 
@@ -575,6 +614,7 @@ def run_tkinter():
                                    orient=tk.HORIZONTAL,
                                    command=update_velocity_slider)
         velocity_slider.pack()
+        velocity_slider.bind("<ButtonRelease-1>", lambda event: sliders_released())
 
         # Slider for changing the acceleration
         acceleration_label = tk.Label(app, text="Acceleration:")
@@ -584,6 +624,7 @@ def run_tkinter():
                                        command=update_acceleration_slider)
 
         acceleration_slider.pack()
+        acceleration_slider.bind("<ButtonRelease-1>", lambda event: sliders_released())
 
         # Buttons for changing lanes
         change_lane_frame = tk.Frame(app)
@@ -689,7 +730,7 @@ def run_tkinter():
         def get_tracks():
             if current_track_id:
                 for key, value in current_track_id.items():
-                    write_to_console2(f"Track of {key}: {value}%")
+                    write_to_console2(f"Track of {key}: {value}")
             else:
                 write_to_console2(f"No vehicle on tracks detected")
             app.after(2000, get_tracks)
@@ -699,7 +740,7 @@ def run_tkinter():
         def get_turning_tracks():
             if is_turning_track:
                 for key, value in is_turning_track.items():
-                    write_to_console3(f"Is {key} on a turning track? {value}%")
+                    write_to_console3(f"Is {key} on a turning track? {value}")
             else:
                 write_to_console3("No vehicles on tracks detected")
             app.after(500, get_turning_tracks)
@@ -707,10 +748,9 @@ def run_tkinter():
 
         app.after(500, get_turning_tracks)
 
-        update_gui()
+        update_turning_track_label()
 
         
-
         app.mainloop()  # Run the Tkinter event loop
     
     def start_tkinter():
@@ -744,17 +784,8 @@ def cleanup(): ### NOT TESTED YET ###
 
 atexit.register(cleanup) # call cleanup when the script exits ### NOT TESTED YET ### 
 
-# publish the initial connect message
-payload_connect = {
-    "type": "connect",
-    "payload": {
-        "value": "true"
-    }
-}
-
-print(f"Connecting to broker at {ip_address}:{port}")
-client.connect(ip_address, port=port)
-#connect_vehicle(vehicleID)
+# ---------------------------- RUN THE SCRIPT --------------------------
+connect_broker()
 
 client.loop_start()  # start the loop
 subscribe_general(client)  # subscribe to the client
