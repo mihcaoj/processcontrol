@@ -730,7 +730,7 @@ def run_tkinter():
         def get_tracks():
             if current_track_id:
                 for key, value in current_track_id.items():
-                    write_to_console2(f"Track of {key}: {value}%")
+                    write_to_console2(f"Track of {key}: {value}")
             else:
                 write_to_console2(f"No vehicle on tracks detected")
             app.after(2000, get_tracks)
@@ -740,7 +740,7 @@ def run_tkinter():
         def get_turning_tracks():
             if is_turning_track:
                 for key, value in is_turning_track.items():
-                    write_to_console3(f"Is {key} on a turning track? {value}%")
+                    write_to_console3(f"Is {key} on a turning track? {value}")
             else:
                 write_to_console3("No vehicles on tracks detected")
             app.after(500, get_turning_tracks)
